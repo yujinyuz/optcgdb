@@ -228,7 +228,7 @@ export default function Layout() {
         {/* Navbar */}
         <div className="shrink-0 bg-slate-50 dark:bg-[#0f1117] border-b border-slate-200/60 dark:border-[#2e303a]/60 px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between gap-2">
-            <div className="relative shrink-0">
+            <div className="shrink-0">
               <img
                 src="/logo-op.png"
                 alt="ONE PIECE CARD GAME"
@@ -239,9 +239,9 @@ export default function Layout() {
                 alt="ONE PIECE CARD GAME"
                 className="h-5 w-auto hidden dark:block"
               />
-              <span className="absolute -right-8 -bottom-0.5 text-[5px] font-bold tracking-wider text-slate-400 dark:text-[#64748b] uppercase">
+              <div className="text-[5px] font-bold tracking-wider text-slate-400 dark:text-[#64748b] uppercase leading-none mt-0.5">
                 Offline DB
-              </span>
+              </div>
             </div>
             <div className="flex items-center gap-0.5">
               <TopSearchBar />
