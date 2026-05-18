@@ -214,6 +214,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
             {loadExternalImages && bestImageUrl ? (
               <div className="flex items-center justify-center py-2">
                 <ImageLoader
+                  key={bestImageUrl}
                   src={getExternalImageUrl(bestImageUrl)}
                   alt={card.name}
                   className="max-h-[28rem] rounded-lg shadow-md cursor-zoom-in"
