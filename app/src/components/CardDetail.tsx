@@ -20,9 +20,9 @@ function getAttributeColor(attr: string): string {
   switch (attr) {
     case 'Strike': return '#eab308'
     case 'Slash': return '#3b82f6'
-    case 'Ranged': return '#22c55e'
-    case 'Wisdom': return '#a855f7'
-    case 'Special': return '#e74c3c'
+    case 'Ranged': return '#e74c3c'
+    case 'Wisdom': return '#22c55e'
+    case 'Special': return '#a855f7'
     default: return '#eab308'
   }
 }
