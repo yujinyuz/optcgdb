@@ -1,6 +1,6 @@
 export default function SkeletonCard() {
   return (
-    <div className="flex flex-col rounded-xl overflow-hidden bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] animate-pulse">
+    <div className="flex flex-col rounded-xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-md shadow-black/5 dark:shadow-white/5 animate-pulse">
       {/* Top strip placeholder */}
       <div className="flex items-center justify-between px-2 py-1.5 bg-slate-50 dark:bg-[#13151f]">
         <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-[#2e303a]" />

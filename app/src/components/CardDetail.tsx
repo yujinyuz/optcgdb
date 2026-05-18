@@ -4,29 +4,7 @@ import { getCardById, getCardPacks, getCardVariants, getRelatedCards } from '../
 import { useAppStore } from '../store'
 import type { Card } from '../types'
 import { COLOR_HEX, RARITY_SHORT, CATEGORY_COLORS } from '../types'
-import { decodeHtmlEntities, renderCardText } from '../utils'
-
-function getAttributeIcon(attr: string): string {
-  switch (attr) {
-    case 'Strike': return '打'
-    case 'Slash': return '斬'
-    case 'Ranged': return '射'
-    case 'Wisdom': return '知'
-    case 'Special': return '特'
-    default: return attr.slice(0, 1)
-  }
-}
-
-function getAttributeColor(attr: string): string {
-  switch (attr) {
-    case 'Strike': return '#eab308'
-    case 'Slash': return '#3b82f6'
-    case 'Ranged': return '#e74c3c'
-    case 'Wisdom': return '#22c55e'
-    case 'Special': return '#a855f7'
-    default: return '#eab308'
-  }
-}
+import { decodeHtmlEntities, renderCardText, getAttributeIcon, getAttributeColor, getTextColorForBg, costCircleBg } from '../utils'
 
 export default function CardDetail() {
   const { id } = useParams<{ id: string }>()
@@ -102,14 +80,7 @@ export default function CardDetail() {
   }
 
   const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
-
-  // Build cost circle background: curved diagonal slash for multi-colored cards
-  const costCircleBg =
-    card.colors.length === 1
-      ? { backgroundColor: primaryColor }
-      : {
-          background: `conic-gradient(from 225deg, ${card.colors.map((c, i) => `${COLOR_HEX[c]} ${i * 180}deg ${(i + 1) * 180}deg`).join(', ')})`,
-        }
+  const costBg = costCircleBg(card)
 
   const baseId = card.id.replace(/_[pr]\d+$/, '')
   const categoryColor = CATEGORY_COLORS[card.category]
@@ -144,8 +115,8 @@ export default function CardDetail() {
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           {card.cost !== null ? (
             <span
-              className="inline-flex items-center justify-center w-10 h-10 rounded-full text-lg font-bold text-white shadow-md"
-              style={costCircleBg}
+              className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-lg font-bold shadow-md ${getTextColorForBg(primaryColor)}`}
+              style={costBg}
             >
               {card.cost}
             </span>
@@ -161,7 +132,7 @@ export default function CardDetail() {
             )}
             {card.attributes.length > 0 && (
               <span
-                className="inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-bold shadow-sm"
+                className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold shadow-sm ${getTextColorForBg(getAttributeColor(card.attributes[0]))}`}
                 style={{ backgroundColor: getAttributeColor(card.attributes[0]) }}
               >
                 {getAttributeIcon(card.attributes[0])}
@@ -308,7 +279,7 @@ export default function CardDetail() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2.5 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
                     >
-                      {img.language === 'english-asia' ? 'Asia' : img.language === 'japanese' ? 'JP' : 'EN'}
+                      {img.language === 'english-asia' ? 'EN-AS' : img.language === 'japanese' ? 'JP' : 'EN'}
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
@@ -346,7 +317,7 @@ export default function CardDetail() {
       {/* Related cards */}
       {relatedCards.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">
+          <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#94a3b8] mb-3">
             Related cards
           </h3>
           <div className="flex gap-3 overflow-x-auto pb-2">
@@ -360,7 +331,7 @@ export default function CardDetail() {
                   <span className="text-[10px] font-mono text-slate-400 dark:text-[#64748b]">{related.id}</span>
                   {related.cost !== null && (
                     <span
-                      className="w-4 h-4 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
+                      className={`w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center ${getTextColorForBg(COLOR_HEX[related.colors[0]] || '#64748b')}`}
                       style={{ backgroundColor: COLOR_HEX[related.colors[0]] || '#64748b' }}
                     >
                       {related.cost}

@@ -232,7 +232,7 @@ function queryBlocks(db: Database): number[] {
 }
 
 function getCardById(db: Database, id: string): unknown | null {
-  const baseId = id.split('_')[0];
+  const baseId = id.replace(/_[pr]\d+$/, '');
   const result = db.exec(
     `SELECT ${buildCardColumns().replace(/c\./g, '')}
      FROM cards

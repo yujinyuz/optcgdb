@@ -40,6 +40,12 @@ function filtersToParams(filters: CardFilters): URLSearchParams {
   return p;
 }
 
+function safeNum(val: string | null): number | undefined {
+  if (!val) return undefined;
+  const n = Number(val);
+  return Number.isNaN(n) ? undefined : n;
+}
+
 function paramsToFilters(params: URLSearchParams): Partial<CardFilters> {
   const f: Partial<CardFilters> = {};
   if (params.has('q')) f.search = params.get('q')!;
@@ -48,13 +54,13 @@ function paramsToFilters(params: URLSearchParams): Partial<CardFilters> {
   if (params.has('rarities')) f.rarities = params.get('rarities')!.split(',') as CardFilters['rarities'];
   if (params.has('attributes')) f.attributes = params.get('attributes')!.split(',') as CardFilters['attributes'];
   if (params.has('set')) f.setPrefix = params.get('set');
-  if (params.has('costMin')) f.costMin = Number(params.get('costMin'));
-  if (params.has('costMax')) f.costMax = Number(params.get('costMax'));
-  if (params.has('powerMin')) f.powerMin = Number(params.get('powerMin'));
-  if (params.has('powerMax')) f.powerMax = Number(params.get('powerMax'));
-  if (params.has('counterMin')) f.counterMin = Number(params.get('counterMin'));
-  if (params.has('counterMax')) f.counterMax = Number(params.get('counterMax'));
-  if (params.has('blocks')) f.blocks = params.get('blocks')!.split(',').map(Number);
+  if (params.has('costMin')) f.costMin = safeNum(params.get('costMin'));
+  if (params.has('costMax')) f.costMax = safeNum(params.get('costMax'));
+  if (params.has('powerMin')) f.powerMin = safeNum(params.get('powerMin'));
+  if (params.has('powerMax')) f.powerMax = safeNum(params.get('powerMax'));
+  if (params.has('counterMin')) f.counterMin = safeNum(params.get('counterMin'));
+  if (params.has('counterMax')) f.counterMax = safeNum(params.get('counterMax'));
+  if (params.has('blocks')) f.blocks = params.get('blocks')!.split(',').map(Number).filter((n) => !Number.isNaN(n));
   return f;
 }
 
@@ -65,6 +71,7 @@ function readUrlFilters(): CardFilters {
 
 function writeUrlFilters(filters: CardFilters) {
   if (typeof window === 'undefined') return;
+  if (window.location.pathname !== '/') return;
   const params = filtersToParams(filters);
   const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}${window.location.hash}`;
   window.history.replaceState(null, '', newUrl);
@@ -189,8 +196,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         searching: false,
       });
     } catch (err) {
-      set({ searching: false });
-      console.error('Load more failed:', err);
+      set({ searching: false, error: String(err) });
     }
   },
 
@@ -252,8 +258,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         searching: false,
       });
     } catch (err) {
-      set({ searching: false });
-      console.error('Search failed:', err);
+      set({ searching: false, error: String(err) });
     }
   },
 }));

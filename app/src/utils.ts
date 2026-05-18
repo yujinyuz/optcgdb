@@ -1,4 +1,6 @@
 import DOMPurify from 'dompurify'
+import { COLOR_HEX } from './types'
+import type { Card } from './types'
 
 const HTML_ENTITY_MAP: Record<string, string> = {
   '&amp;': '&',
@@ -72,4 +74,49 @@ function highlightKeywords(html: string): string {
       segment.startsWith('<') ? segment : segment.replace(regex, '<span class="kw">$1</span>')
     )
     .join('')
+}
+
+/** Strip HTML tags from a string */
+export function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+/** Get kanji icon for a card attribute */
+export function getAttributeIcon(attr: string): string {
+  switch (attr) {
+    case 'Strike': return '打'
+    case 'Slash': return '斬'
+    case 'Ranged': return '射'
+    case 'Wisdom': return '知'
+    case 'Special': return '特'
+    default: return attr.slice(0, 1)
+  }
+}
+
+/** Get color hex for a card attribute */
+export function getAttributeColor(attr: string): string {
+  switch (attr) {
+    case 'Strike': return '#eab308'
+    case 'Slash': return '#3b82f6'
+    case 'Ranged': return '#e74c3c'
+    case 'Wisdom': return '#22c55e'
+    case 'Special': return '#a855f7'
+    default: return '#eab308'
+  }
+}
+
+/** Use dark text for light/bright backgrounds (Yellow, Green) to meet WCAG AA */
+export function getTextColorForBg(hex: string): string {
+  const lightBgHexes = ['#f1c40f', '#eab308', '#2ecc71', '#22c55e']
+  return lightBgHexes.includes(hex.toLowerCase()) ? 'text-[#1a1a2e]' : 'text-white'
+}
+
+/** Build cost circle background style for a card */
+export function costCircleBg(card: Card): React.CSSProperties {
+  const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
+  return card.colors.length === 1
+    ? { backgroundColor: primaryColor }
+    : {
+        background: `conic-gradient(from 225deg, ${card.colors.map((c, i) => `${COLOR_HEX[c]} ${i * 180}deg ${(i + 1) * 180}deg`).join(', ')})`,
+      }
 }

@@ -42,7 +42,8 @@ function TogglePill({
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 px-2 py-1 rounded-md text-[11px] font-medium transition-all border ${
+      aria-pressed={active}
+      className={`shrink-0 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all border ${
         active
           ? 'bg-[#3b82f6]/10 dark:bg-[#3b82f6]/20 text-[#3b82f6] dark:text-[#60a5fa] border-[#3b82f6]/30 dark:border-[#3b82f6]/40'
           : 'text-slate-500 dark:text-[#64748b] border-slate-200 dark:border-[#2e303a] hover:border-slate-300 dark:hover:border-[#3e4050] hover:text-slate-700 dark:hover:text-[#94a3b8]'
@@ -55,6 +56,7 @@ function TogglePill({
 }
 
 function RangeInput({
+  label,
   min,
   max,
   onMinChange,
@@ -63,6 +65,7 @@ function RangeInput({
   maxPlaceholder,
   step = 1,
 }: {
+  label: string
   min: number | null
   max: number | null
   onMinChange: (val: number | null) => void
@@ -76,6 +79,7 @@ function RangeInput({
       <input
         type="number"
         step={step}
+        aria-label={`${label} min`}
         placeholder={minPlaceholder}
         value={min ?? ''}
         onChange={(e) => onMinChange(e.target.value === '' ? null : Number(e.target.value))}
@@ -85,6 +89,7 @@ function RangeInput({
       <input
         type="number"
         step={step}
+        aria-label={`${label} max`}
         placeholder={maxPlaceholder}
         value={max ?? ''}
         onChange={(e) => onMaxChange(e.target.value === '' ? null : Number(e.target.value))}
@@ -148,6 +153,7 @@ export default function FilterBar() {
         </svg>
         <input
           type="text"
+          aria-label="Search cards"
           placeholder="Search cards..."
           value={localSearch}
           onChange={(e) => handleSearchChange(e.target.value)}
@@ -308,6 +314,7 @@ export default function FilterBar() {
       {/* Cost range */}
       <FilterSection label="Cost">
         <RangeInput
+          label="Cost"
           min={filters.costMin}
           max={filters.costMax}
           onMinChange={(v) => {
@@ -326,6 +333,7 @@ export default function FilterBar() {
       {/* Power range */}
       <FilterSection label="Power">
         <RangeInput
+          label="Power"
           min={filters.powerMin}
           max={filters.powerMax}
           onMinChange={(v) => {
@@ -345,6 +353,7 @@ export default function FilterBar() {
       {/* Counter range */}
       <FilterSection label="Counter">
         <RangeInput
+          label="Counter"
           min={filters.counterMin}
           max={filters.counterMax}
           onMinChange={(v) => {

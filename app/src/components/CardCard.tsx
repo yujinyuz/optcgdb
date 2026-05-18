@@ -1,33 +1,7 @@
 import type { Card } from '../types'
 import { COLOR_HEX, RARITY_SHORT, CATEGORY_COLORS } from '../types'
-import { decodeHtmlEntities } from '../utils'
+import { decodeHtmlEntities, stripHtml, getAttributeIcon, getAttributeColor, getTextColorForBg, costCircleBg } from '../utils'
 import { useAppStore } from '../store'
-
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-}
-
-function getAttributeIcon(attr: string): string {
-  switch (attr) {
-    case 'Strike': return '打'
-    case 'Slash': return '斬'
-    case 'Ranged': return '射'
-    case 'Wisdom': return '知'
-    case 'Special': return '特'
-    default: return attr.slice(0, 1)
-  }
-}
-
-function getAttributeColor(attr: string): string {
-  switch (attr) {
-    case 'Strike': return '#eab308'
-    case 'Slash': return '#3b82f6'
-    case 'Ranged': return '#e74c3c'
-    case 'Wisdom': return '#22c55e'
-    case 'Special': return '#a855f7'
-    default: return '#eab308'
-  }
-}
 
 interface CardCardProps {
   card: Card
@@ -38,17 +12,12 @@ export default function CardCard({ card }: CardCardProps) {
   const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
   const categoryColor = CATEGORY_COLORS[card.category]
 
-  // Build cost circle background: curved diagonal slash for multi-colored cards
-  const costCircleBg =
-    card.colors.length === 1
-      ? { backgroundColor: primaryColor }
-      : {
-          background: `conic-gradient(from 225deg, ${card.colors.map((c, i) => `${COLOR_HEX[c]} ${i * 180}deg ${(i + 1) * 180}deg`).join(', ')})`,
-        }
+  const costBg = costCircleBg(card)
 
   return (
     <div
       role="button"
+      aria-label={card.name}
       tabIndex={0}
       onClick={() => setSelectedCard(card)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedCard(card) }}
@@ -58,8 +27,8 @@ export default function CardCard({ card }: CardCardProps) {
       <div className="flex items-center justify-between px-2 py-1.5 shrink-0 bg-slate-50 dark:bg-[#13151f]">
         {card.cost !== null ? (
           <span
-            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white shadow-sm"
-            style={costCircleBg}
+            className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shadow-sm ${getTextColorForBg(primaryColor)}`}
+            style={costBg}
           >
             {card.cost}
           </span>
@@ -75,7 +44,7 @@ export default function CardCard({ card }: CardCardProps) {
           )}
           {card.attributes.length > 0 && (
             <span
-              className="inline-flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold shadow-sm"
+              className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shadow-sm ${getTextColorForBg(getAttributeColor(card.attributes[0]))}`}
               style={{ backgroundColor: getAttributeColor(card.attributes[0]) }}
             >
               {getAttributeIcon(card.attributes[0])}
@@ -113,7 +82,7 @@ export default function CardCard({ card }: CardCardProps) {
 
         {/* Category */}
         <div
-          className={`text-[9px] font-bold tracking-wider uppercase text-center ${card.effect ? 'mt-2' : ''}`}
+          className={`text-[10px] font-bold tracking-wider uppercase text-center ${card.effect ? 'mt-2' : ''}`}
           style={categoryColor ? { color: categoryColor } : undefined}
         >
           {card.category === 'Don' ? 'DON!!' : card.category}
@@ -134,7 +103,7 @@ export default function CardCard({ card }: CardCardProps) {
         {/* Counter — right-aligned at bottom of content area */}
         {card.counter !== null && (
           <div className="mt-auto pt-1 text-right">
-            <span className="text-[9px] font-bold text-[#3498db]">＋{card.counter}</span>
+            <span className="text-[10px] font-bold text-[#3498db]">＋{card.counter}</span>
           </div>
         )}
       </div>
@@ -147,7 +116,7 @@ export default function CardCard({ card }: CardCardProps) {
             {RARITY_SHORT[card.rarity] || card.rarity}
           </span>
           {card.block_number !== null && (
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/20 text-[9px] font-bold">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/20 text-[10px] font-bold">
               {card.block_number}
             </span>
           )}

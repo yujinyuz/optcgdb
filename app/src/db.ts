@@ -87,8 +87,8 @@ export async function getCardById(id: string): Promise<Card | null> {
   return result;
 }
 
-export async function getCardPacks(cardId: string): Promise<{ packId: string; label: string; rawTitle: string; language: string }[]> {
-  const result = await sendRequest<{ packId: string; label: string; rawTitle: string; language: string }[]>('getCardPacks', { cardId });
+export async function getCardPacks(cardId: string): Promise<{ packId: string; label: string; rawTitle: string }[]> {
+  const result = await sendRequest<{ packId: string; label: string; rawTitle: string }[]>('getCardPacks', { cardId });
   return result;
 }
 

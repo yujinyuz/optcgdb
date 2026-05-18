@@ -11,7 +11,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748b] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] transition-colors"
+      className="p-2 rounded-lg text-slate-400 dark:text-[#64748b] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] transition-colors"
       aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {theme === 'dark' ? (
@@ -35,7 +35,7 @@ function OfflineStatus() {
     <button
       type="button"
       onClick={triggerOfflineToast}
-      className={`p-1.5 rounded-lg transition-colors ${
+      className={`p-2 rounded-lg transition-colors ${
         offlineReady
           ? 'text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
           : 'text-slate-300 dark:text-[#3a3d4a] hover:bg-slate-100 dark:hover:bg-[#1a1d2e]'
@@ -65,7 +65,7 @@ function LanguageToggle() {
     <button
       type="button"
       onClick={() => setPreferredLanguage(preferredLanguage === 'english' ? 'japanese' : 'english')}
-      className="p-1.5 rounded-lg text-xs font-bold text-slate-400 dark:text-[#64748b] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] transition-colors"
+      className="p-2 rounded-lg text-xs font-bold text-slate-400 dark:text-[#64748b] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] transition-colors"
       aria-label={`Switch to ${preferredLanguage === 'english' ? 'Japanese' : 'English'}`}
     >
       {preferredLanguage === 'english' ? 'EN' : 'JP'}
@@ -88,6 +88,8 @@ export default function Layout() {
       <div className="lg:hidden fixed bottom-4 right-4 z-40">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-expanded={sidebarOpen}
+          aria-label="Toggle filters"
           className="p-3 bg-[#3b82f6] text-white rounded-full shadow-lg hover:bg-[#2563eb] transition-colors"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -115,7 +117,7 @@ export default function Layout() {
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-1.5 text-slate-500 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white"
+              className="lg:hidden p-2 text-slate-500 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -128,7 +130,7 @@ export default function Layout() {
               href="https://ko-fi.com/yujinyuz"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748b] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] transition-colors"
+              className="p-2 rounded-lg text-slate-400 dark:text-[#64748b] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] transition-colors"
               aria-label="Support on Ko-fi"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
