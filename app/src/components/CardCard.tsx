@@ -53,6 +53,14 @@ export default function CardCard({ card }: CardCardProps) {
           })(),
         }
 
+  // Build cost circle background: diagonal slash for multi-colored cards
+  const costCircleBg =
+    card.colors.length === 1
+      ? { backgroundColor: primaryColor }
+      : {
+          background: `conic-gradient(from 135deg, ${card.colors.map((c, i) => `${COLOR_HEX[c]} ${i * 180}deg ${(i + 1) * 180}deg`).join(', ')})`,
+        }
+
   return (
     <Link
       to={`/card/${card.id}`}
@@ -63,7 +71,7 @@ export default function CardCard({ card }: CardCardProps) {
         {card.cost !== null ? (
           <span
             className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold text-white shadow-sm"
-            style={{ backgroundColor: primaryColor }}
+            style={costCircleBg}
           >
             {card.cost}
           </span>
