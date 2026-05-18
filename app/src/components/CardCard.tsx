@@ -73,7 +73,7 @@ export default function CardCard({ card }: CardCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#1a1d2e] shadow-sm hover:scale-105 transition-all"
+            className="hover:scale-105 transition-all"
             title="Open card image in new tab"
           >
             <img src="/opcg-favicon.png" alt="" className="w-5 h-5" />

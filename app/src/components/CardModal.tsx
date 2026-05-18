@@ -226,7 +226,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
                   href={bestImageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center w-14 h-14 rounded-full bg-white dark:bg-[#1a1d2e] shadow-md hover:scale-105 transition-all"
+                  className="hover:scale-105 transition-all"
                   title="Open card image in new tab"
                 >
                   <img src="/opcg-favicon.png" alt="" className="w-7 h-7" />
