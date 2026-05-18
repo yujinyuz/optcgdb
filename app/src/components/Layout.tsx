@@ -228,7 +228,16 @@ export default function Layout() {
         {/* Navbar */}
         <div className="shrink-0 bg-slate-50 dark:bg-[#0f1117] border-b border-slate-200/60 dark:border-[#2e303a]/60 px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white shrink-0">OPTCG DB</span>
+            <img
+              src="/logo-op.png"
+              alt="ONE PIECE CARD GAME"
+              className="h-5 w-auto shrink-0 dark:hidden"
+            />
+            <img
+              src="/logo-op-white.png"
+              alt="ONE PIECE CARD GAME"
+              className="h-5 w-auto shrink-0 hidden dark:block"
+            />
             <div className="flex items-center gap-0.5">
               <TopSearchBar />
               <button
