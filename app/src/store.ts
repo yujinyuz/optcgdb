@@ -95,6 +95,7 @@ interface AppState {
   selectedCard: Card | null;
   theme: Theme;
   preferredLanguage: PreferredLanguage;
+  loadExternalImages: boolean;
   offlineReady: boolean;
   showOfflineToast: boolean;
   searching: boolean;
@@ -107,6 +108,7 @@ interface AppState {
   setSelectedCard: (card: Card | null) => void;
   toggleTheme: () => void;
   setPreferredLanguage: (lang: PreferredLanguage) => void;
+  setLoadExternalImages: (enabled: boolean) => void;
   setOfflineReady: (ready: boolean) => void;
   triggerOfflineToast: () => void;
   dismissOfflineToast: () => void;
@@ -129,6 +131,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedCard: null,
   theme: getInitialTheme(),
   preferredLanguage: getInitialLanguage(),
+  loadExternalImages: localStorage.getItem('optcg-external-images') === 'true',
   offlineReady: false,
   showOfflineToast: false,
   searching: false,
@@ -222,6 +225,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.setItem('optcg-language', lang);
     set({ preferredLanguage: lang });
     get().search();
+  },
+
+  setLoadExternalImages: (enabled) => {
+    localStorage.setItem('optcg-external-images', String(enabled));
+    set({ loadExternalImages: enabled });
   },
 
   setOfflineReady: (ready) => {

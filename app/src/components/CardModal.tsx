@@ -3,7 +3,7 @@ import { getCardById, getCardPacks, getCardVariants } from '../db'
 import { useAppStore } from '../store'
 import type { Card } from '../types'
 import { COLOR_HEX, RARITY_SHORT, CATEGORY_COLORS } from '../types'
-import { decodeHtmlEntities, renderCardText, getAttributeIcon, getAttributeColor, getTextColorForBg, costCircleBg } from '../utils'
+import { decodeHtmlEntities, renderCardText, getAttributeIcon, getAttributeColor, getTextColorForBg, costCircleBg, getExternalImageUrl } from '../utils'
 
 interface CardModalProps {
   cardId: string
@@ -16,11 +16,13 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
   const [cardVariants, setCardVariants] = useState<{ card: Card; images: { language: string; imgUrl: string | null }[] }[]>([])
   const [loading, setLoading] = useState(true)
   const [closing, setClosing] = useState(false)
+  const [zoomedImg, setZoomedImg] = useState<string | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
   const cards = useAppStore((state) => state.cards)
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
   const preferredLanguage = useAppStore((state) => state.preferredLanguage)
+  const loadExternalImages = useAppStore((state) => state.loadExternalImages)
 
   const currentIndex = cards.findIndex((c) => c.id === cardId)
   const hasPrev = currentIndex > 0
@@ -169,7 +171,8 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
           <div
             className="rounded-2xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-xl shadow-black/10 dark:shadow-black/30"
           >
-            {/* Top strip: Cost | Power | Attribute */}
+            {/* Top strip: Cost | Power | Attribute (only when no image) */}
+            {(!loadExternalImages || !bestImageUrl) && (
             <div className="flex items-center justify-between px-4 pt-4 pb-2">
               {card.cost !== null ? (
                 <span
@@ -198,9 +201,20 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
                 )}
               </div>
             </div>
+            )}
 
-            {/* Image link — centered icon */}
-            {bestImageUrl && (
+            {/* Card image or link */}
+            {loadExternalImages && bestImageUrl ? (
+              <div className="flex items-center justify-center py-2">
+                <img
+                  src={getExternalImageUrl(bestImageUrl)}
+                  alt={card.name}
+                  className="max-h-[28rem] rounded-lg shadow-md cursor-zoom-in"
+                  onClick={() => setZoomedImg(getExternalImageUrl(bestImageUrl))}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              </div>
+            ) : bestImageUrl && (
               <div className="flex items-center justify-center py-4">
                 <a
                   href={bestImageUrl}
@@ -246,25 +260,27 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
               </div>
             )}
 
-            {/* Header: Category -> Name -> Type */}
-            <div className="px-4 pb-3">
-              <div
-                className="text-xs font-bold tracking-[0.15em] uppercase text-center"
-                style={categoryColor ? { color: categoryColor } : undefined}
-              >
-                {card.category === 'Don' ? 'DON!!' : card.category}
-              </div>
-
-              <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white text-center leading-tight">
-                {decodeHtmlEntities(card.name)}
-              </h1>
-
-              {card.types.length > 0 && (
-                <div className="mt-1 text-sm text-center text-slate-500 dark:text-[#94a3b8] truncate">
-                  {card.types.join(' / ')}
+            {/* Header: Category -> Name -> Type (only when no image) */}
+            {(!loadExternalImages || !bestImageUrl) && (
+              <div className="px-4 pb-3">
+                <div
+                  className="text-xs font-bold tracking-[0.15em] uppercase text-center"
+                  style={categoryColor ? { color: categoryColor } : undefined}
+                >
+                  {card.category === 'Don' ? 'DON!!' : card.category}
                 </div>
-              )}
-            </div>
+
+                <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white text-center leading-tight">
+                  {decodeHtmlEntities(card.name)}
+                </h1>
+
+                {card.types.length > 0 && (
+                  <div className="mt-1 text-sm text-center text-slate-500 dark:text-[#94a3b8] truncate">
+                    {card.types.join(' / ')}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Bottom banner */}
             <div className="px-4 py-3 bg-slate-900 dark:bg-black text-white">
@@ -397,6 +413,21 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
       style={overlayStyle}
     >
       {inner}
+
+      {/* Full-screen image zoom overlay */}
+      {zoomedImg && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center cursor-zoom-out"
+          onClick={() => setZoomedImg(null)}
+        >
+          <img
+            src={zoomedImg}
+            alt="Full view"
+            className="max-w-[90vw] max-h-[90vh] object-contain"
+            onClick={(e) => { e.stopPropagation(); setZoomedImg(null) }}
+          />
+        </div>
+      )}
     </div>
   )
 }

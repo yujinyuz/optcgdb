@@ -1,6 +1,6 @@
 import type { Card } from '../types'
 import { COLOR_HEX, RARITY_SHORT, CATEGORY_COLORS } from '../types'
-import { decodeHtmlEntities, stripHtml, getAttributeIcon, getAttributeColor, getTextColorForBg, costCircleBg } from '../utils'
+import { decodeHtmlEntities, stripHtml, getAttributeIcon, getAttributeColor, getTextColorForBg, costCircleBg, getExternalImageUrl } from '../utils'
 import { useAppStore } from '../store'
 
 interface CardCardProps {
@@ -9,6 +9,7 @@ interface CardCardProps {
 
 export default function CardCard({ card }: CardCardProps) {
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
+  const loadExternalImages = useAppStore((state) => state.loadExternalImages)
   const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
   const categoryColor = CATEGORY_COLORS[card.category]
 
@@ -23,7 +24,8 @@ export default function CardCard({ card }: CardCardProps) {
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedCard(card) }}
       className="group flex flex-col rounded-xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-md shadow-black/5 dark:shadow-white/5 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-white/10 active:scale-[0.98] transition-all duration-150 cursor-pointer"
     >
-      {/* Top strip: Cost | Power | Attribute */}
+      {/* Top strip: Cost | Power | Attribute (only when no image) */}
+      {(!loadExternalImages || !card.img_url) && (
       <div className="flex items-center justify-between px-2 py-1.5 shrink-0 bg-slate-50 dark:bg-[#13151f]">
         {card.cost !== null ? (
           <span
@@ -52,9 +54,20 @@ export default function CardCard({ card }: CardCardProps) {
           )}
         </div>
       </div>
+      )}
 
-      {/* Image link centered */}
-      {card.img_url && (
+      {/* Card image or link */}
+      {loadExternalImages && card.img_url ? (
+        <div className="shrink-0 bg-slate-50 dark:bg-[#13151f]">
+          <img
+            src={getExternalImageUrl(card.img_url)}
+            alt={card.name}
+            className="w-full aspect-[5/7] object-cover"
+            loading="lazy"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+          />
+        </div>
+      ) : card.img_url && (
         <div className="shrink-0 py-2 flex items-center justify-center bg-slate-50/50 dark:bg-[#13151f]/50">
           <a
             href={card.img_url}
@@ -73,8 +86,8 @@ export default function CardCard({ card }: CardCardProps) {
 
       {/* Effect -> Category -> Name -> Type */}
       <div className="flex-1 px-2.5 py-2 flex flex-col min-h-0">
-        {/* Effect */}
-        {card.effect && (
+        {/* Effect (only when no image) */}
+        {(!loadExternalImages && card.effect) && (
           <p className="text-[10px] text-slate-600 dark:text-[#94a3b8] leading-relaxed line-clamp-3">
             {stripHtml(decodeHtmlEntities(card.effect))}
           </p>
@@ -82,7 +95,7 @@ export default function CardCard({ card }: CardCardProps) {
 
         {/* Category */}
         <div
-          className={`text-[10px] font-bold tracking-wider uppercase text-center ${card.effect ? 'mt-2' : ''}`}
+          className={`text-[10px] font-bold tracking-wider uppercase text-center ${(!loadExternalImages && card.effect) ? 'mt-2' : ''}`}
           style={categoryColor ? { color: categoryColor } : undefined}
         >
           {card.category === 'Don' ? 'DON!!' : card.category}

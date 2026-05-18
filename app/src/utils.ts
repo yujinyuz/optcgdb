@@ -2,6 +2,10 @@ import DOMPurify from 'dompurify'
 import { COLOR_HEX } from './types'
 import type { Card } from './types'
 
+export function getExternalImageUrl(imgUrl: string): string {
+  return `https://serveproxy.com/?url=${encodeURIComponent(imgUrl)}`
+}
+
 const HTML_ENTITY_MAP: Record<string, string> = {
   '&amp;': '&',
   '&lt;': '<',

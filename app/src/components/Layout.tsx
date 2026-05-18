@@ -7,6 +7,8 @@ function SettingsMenu() {
   const [open, setOpen] = useState(false)
   const [closing, setClosing] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const loadExternalImages = useAppStore((state) => state.loadExternalImages)
+  const setLoadExternalImages = useAppStore((state) => state.setLoadExternalImages)
   const theme = useAppStore((state) => state.theme)
   const toggleTheme = useAppStore((state) => state.toggleTheme)
   const preferredLanguage = useAppStore((state) => state.preferredLanguage)
@@ -90,6 +92,16 @@ function SettingsMenu() {
                 </svg>
               </button>
             </div>
+          </div>
+          <div className="border-t border-slate-100 dark:border-[#2e303a] my-1" />
+          <div className="flex items-center justify-between px-3 py-2">
+            <span className="text-sm text-slate-700 dark:text-[#cbd5e1]">Card images</span>
+            <button
+              onClick={() => setLoadExternalImages(!loadExternalImages)}
+              className={`relative w-9 h-5 rounded-full transition-colors ${loadExternalImages ? 'bg-[#3b82f6]' : 'bg-slate-200 dark:bg-[#3a3d4a]'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${loadExternalImages ? 'translate-x-4' : 'translate-x-0'}`} />
+            </button>
           </div>
           <div className="border-t border-slate-100 dark:border-[#2e303a] my-1" />
           <a
