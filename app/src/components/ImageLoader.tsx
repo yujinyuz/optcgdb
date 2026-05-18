@@ -16,7 +16,13 @@ export default function ImageLoader({ src, alt, className = '', onClick }: Image
   return (
     <div className={`relative ${className}`}>
       {!loaded && (
-        <div className="absolute inset-0 bg-slate-200 dark:bg-[#25283a] animate-pulse rounded-lg" />
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-[#1a1d2e]">
+          <img
+            src="/opcg-favicon.png"
+            alt=""
+            className="w-6 h-6 opacity-40 animate-pulse"
+          />
+        </div>
       )}
       <img
         src={src}
