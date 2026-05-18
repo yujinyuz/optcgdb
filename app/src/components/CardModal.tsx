@@ -216,9 +216,9 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
                 <div className="relative w-full max-w-xs aspect-[5/7] rounded-lg overflow-hidden bg-slate-100 dark:bg-[#1a1d2e] shadow-md">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <img
-                      src="/opcg-favicon.png"
+                      src="/loading-logo.webp"
                       alt=""
-                      className="w-10 h-10 opacity-30 animate-pulse"
+                      className="w-20 opacity-30 animate-pulse"
                     />
                   </div>
                   <ImageLoader

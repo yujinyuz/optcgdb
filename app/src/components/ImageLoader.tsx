@@ -18,9 +18,9 @@ export default function ImageLoader({ src, alt, className = '', onClick }: Image
       {!loaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-[#1a1d2e]">
           <img
-            src="/opcg-favicon.png"
+            src="/loading-logo.webp"
             alt=""
-            className="w-6 h-6 opacity-40 animate-pulse"
+            className="w-16 opacity-30 animate-pulse"
           />
         </div>
       )}
