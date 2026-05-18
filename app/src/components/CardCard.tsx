@@ -105,7 +105,7 @@ export default function CardCard({ card }: CardCardProps) {
 
         {/* Effect */}
         {card.effect && (
-          <p className="mt-1.5 text-[10px] text-slate-600 dark:text-[#94a3b8] leading-relaxed line-clamp-2">
+          <p className="mt-1.5 text-[10px] text-slate-900 dark:text-white leading-relaxed line-clamp-2">
             {stripHtml(decodeHtmlEntities(card.effect))}
           </p>
         )}

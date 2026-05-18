@@ -182,9 +182,9 @@ export default function CardDetail() {
 
           {/* Effect */}
           {card.effect && (
-            <div className="mt-3 rounded-xl border border-slate-200 dark:border-[#2e303a] bg-slate-50 dark:bg-[#13151f] p-4">
+            <div className="mt-3 rounded-xl border-2 border-slate-900 dark:border-white bg-white dark:bg-[#0f1117] p-4">
               <div
-                className="text-sm text-slate-800 dark:text-[#e2e8f0] leading-relaxed"
+                className="text-sm text-slate-900 dark:text-white leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: renderCardText(card.effect) }}
               />
             </div>
