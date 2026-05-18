@@ -32,18 +32,23 @@ export default function CardCard({ card }: CardCardProps) {
       style={{ borderColor: primaryColor }}
     >
       <div className="flex flex-col flex-1 min-h-0 relative">
-        {/* Counter — absolutely positioned on left edge */}
+        {/* Counter — vertical strip on left edge matching card color */}
         {card.counter !== null && (
-          <span
-            className="absolute left-0.5 top-1/2 -translate-y-1/2 z-10 text-[7px] font-bold text-[#3498db] tracking-tight"
-            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-4 z-10 flex items-center justify-center text-white"
+            style={{ backgroundColor: primaryColor }}
           >
-            ＋{card.counter}
-          </span>
+            <span
+              className="text-[7px] font-bold tracking-tight"
+              style={{ writingMode: 'vertical-lr' }}
+            >
+              ＋{card.counter}
+            </span>
+          </div>
         )}
 
         {/* Top strip: Cost | Power | Attribute — fixed height */}
-        <div className="flex items-center justify-between px-2.5 py-2 shrink-0">
+        <div className={`flex items-center justify-between py-2 shrink-0 ${card.counter !== null ? 'pl-5 pr-2.5' : 'px-2.5'}`}>
           {card.cost !== null ? (
             <span
               className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold text-white shadow-sm"
@@ -70,25 +75,25 @@ export default function CardCard({ card }: CardCardProps) {
         </div>
 
         {/* Name + Effect */}
-        <div className="flex-1 px-3 pb-2 flex flex-col min-h-0">
-        {/* Name */}
-        <h3 className="mt-1 text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
-          {decodeHtmlEntities(card.name)}
-        </h3>
+        <div className={`flex-1 pb-2 flex flex-col min-h-0 ${card.counter !== null ? 'pl-5 pr-3' : 'px-3'}`}>
+          {/* Name */}
+          <h3 className="mt-1 text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
+            {decodeHtmlEntities(card.name)}
+          </h3>
 
-        {/* Effect */}
-        {card.effect && (
-          <p className="mt-1.5 text-[10px] text-slate-600 dark:text-[#94a3b8] leading-relaxed line-clamp-2">
-            {stripHtml(decodeHtmlEntities(card.effect))}
-          </p>
-        )}
-      </div>
+          {/* Effect */}
+          {card.effect && (
+            <p className="mt-1.5 text-[10px] text-slate-600 dark:text-[#94a3b8] leading-relaxed line-clamp-2">
+              {stripHtml(decodeHtmlEntities(card.effect))}
+            </p>
+          )}
+        </div>
 
-      {/* Bottom banner: Category | Types | ID/Block — fixed height, always at bottom */}
-      <div
-        className="shrink-0 px-3 py-2 text-white"
-        style={{ backgroundColor: primaryColor }}
-      >
+        {/* Bottom banner: Category | Types | ID/Block — fixed height, always at bottom */}
+        <div
+          className={`shrink-0 py-2 text-white ${card.counter !== null ? 'pl-5 pr-3' : 'px-3'}`}
+          style={{ backgroundColor: primaryColor }}
+        >
         <div className="text-[9px] font-bold tracking-[0.15em] uppercase text-center opacity-90">
           {card.category === 'Don' ? 'DON!!' : card.category}
         </div>
