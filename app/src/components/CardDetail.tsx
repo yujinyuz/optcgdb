@@ -125,7 +125,7 @@ export default function CardDetail() {
       </Link>
 
       {/* Card — matches tile layout but expanded */}
-      <div className="rounded-2xl overflow-hidden border-2 bg-white dark:bg-[#1a1d2e] shadow-xl shadow-black/10 dark:shadow-black/30" style={{ borderColor: primaryColor }}>
+      <div className="rounded-2xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-xl shadow-black/10 dark:shadow-black/30">
         {/* Top strip: Cost | Power | Attribute */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           {card.cost !== null ? (
