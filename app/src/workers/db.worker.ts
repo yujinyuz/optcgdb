@@ -246,16 +246,17 @@ function getCardPacks(db: Database, cardId: string): unknown[] {
 
   const placeholders = ids.map(() => '?').join(',');
   const result = db.exec(
-    `SELECT DISTINCT p.id, p.label, p.raw_title
+    `SELECT p.label, MIN(p.raw_title) as raw_title
      FROM card_packs cp
      JOIN packs p ON cp.pack_id = p.id AND cp.language = p.language
      WHERE cp.card_id IN (${placeholders}) AND p.label != '' AND p.label IS NOT NULL
-     ORDER BY p.id`,
+     GROUP BY p.label
+     ORDER BY p.label`,
     ids
   );
   if (!result[0]) return [];
   return result[0].values.map((row) => ({
-    packId: row[0], label: row[1], rawTitle: row[2],
+    packId: row[0], label: row[0], rawTitle: row[1],
   }));
 }
 
