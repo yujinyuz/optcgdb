@@ -5,6 +5,7 @@ import FilterBar from './FilterBar'
 
 function SettingsMenu() {
   const [open, setOpen] = useState(false)
+  const [closing, setClosing] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const theme = useAppStore((state) => state.theme)
   const toggleTheme = useAppStore((state) => state.toggleTheme)
@@ -13,19 +14,30 @@ function SettingsMenu() {
 
   useEffect(() => {
     if (!open) return
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false)
+    const handleClick = (e: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setClosing(true)
+        setTimeout(() => { setOpen(false); setClosing(false) }, 120)
+      }
     }
     document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('touchstart', handleClick)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('touchstart', handleClick)
+    }
   }, [open])
 
   return (
     <div className="relative" ref={menuRef}>
       <button
         type="button"
-        onClick={() => setOpen(!open)}
-        className="p-2 text-slate-500 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] rounded-lg transition-colors"
+        onClick={() => {
+          if (open) { setClosing(true); setTimeout(() => { setOpen(false); setClosing(false) }, 120) }
+          else { setOpen(true); setClosing(false) }
+        }}
+        className={`p-2 text-slate-500 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] rounded-lg transition-all ${open ? 'rotate-45' : 'rotate-0'}`}
+        style={{ transition: 'color 150ms, background-color 150ms, transform 200ms var(--ease-out-expo)' }}
         aria-label="Settings"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -34,7 +46,13 @@ function SettingsMenu() {
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-xl shadow-lg py-2 z-50">
+        <div
+          className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-xl shadow-lg py-2 z-50 origin-top-right"
+          style={closing
+            ? { animation: 'menuOut 120ms var(--ease-out-quart) forwards' }
+            : { animation: 'menuIn 150ms var(--ease-out-expo) forwards' }
+          }
+        >
           <div className="flex items-center justify-between px-3 py-2">
             <span className="text-sm text-slate-700 dark:text-[#cbd5e1]">Language</span>
             <div className="flex rounded-lg border border-slate-200 dark:border-[#2e303a] overflow-hidden">
@@ -136,10 +154,11 @@ function TopSearchBar() {
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarClosing, setSidebarClosing] = useState(false)
 
   useEffect(() => {
-    const handleClose = () => setSidebarOpen(false)
-    const handleOpen = () => setSidebarOpen(true)
+    const handleClose = () => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, 200) }
+    const handleOpen = () => { setSidebarOpen(true); setSidebarClosing(false) }
     window.addEventListener('optcg-close-sidebar', handleClose)
     window.addEventListener('optcg-open-sidebar', handleOpen)
     return () => {
@@ -152,21 +171,34 @@ export default function Layout() {
     <div className="flex-1 flex min-h-screen overflow-hidden">
       {/* Overlay backdrop */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-30 bg-black/40" onClick={() => setSidebarOpen(false)} style={{ animation: 'sidebarOverlayIn 150ms var(--ease-out-quart) forwards' }} />
+        <div
+          className={`fixed inset-0 z-30 bg-black/40 ${sidebarClosing ? 'animate-[sidebarOverlayOut_200ms_var(--ease-out-quart)_forwards]' : ''}`}
+          onClick={() => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, 200) }}
+          style={!sidebarClosing ? { animation: 'sidebarOverlayIn 150ms var(--ease-out-quart) forwards' } : undefined}
+        />
       )}
 
       {/* Filter panel: bottom sheet on mobile, right drawer on desktop */}
       <aside
-        className={`${
-          sidebarOpen ? 'translate-y-0 sm:translate-x-0 sm:translate-y-0' : 'translate-y-full sm:translate-x-full sm:translate-y-0'
-        } fixed z-30 bg-white dark:bg-[#1a1d2e] border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-[#2e303a] overflow-y-auto transition-transform duration-200 shadow-xl inset-x-0 bottom-0 top-1/3 sm:inset-x-auto sm:top-0 sm:right-0 sm:bottom-0 sm:w-80 sm:h-screen rounded-t-2xl sm:rounded-none`}
+        className={`fixed z-30 bg-white dark:bg-[#1a1d2e] border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-[#2e303a] overflow-y-auto transition-transform duration-200 shadow-xl inset-x-0 bottom-0 top-1/3 sm:inset-x-auto sm:top-0 sm:right-0 sm:bottom-0 sm:w-80 sm:h-screen rounded-t-2xl sm:rounded-none ${
+          sidebarClosing
+            ? 'translate-y-full sm:translate-x-full sm:translate-y-0'
+            : sidebarOpen
+              ? 'translate-y-0 sm:translate-x-0 sm:translate-y-0'
+              : 'translate-y-full sm:translate-x-full sm:translate-y-0'
+        }`}
       >
         <div className="p-4">
+          {/* Mobile drag handle */}
+          <div className="flex justify-center mb-3 sm:hidden">
+            <div className="w-8 h-1 rounded-full bg-slate-300 dark:bg-[#3a3d4a]" />
+          </div>
+
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">Filters</span>
             <button
-              onClick={() => setSidebarOpen(false)}
+              onClick={() => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, 200) }}
               className="p-2 text-slate-500 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#25283a] rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

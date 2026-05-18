@@ -42,7 +42,7 @@ function TogglePill({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`shrink-0 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all border ${
+      className={`shrink-0 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all border active:scale-95 ${
         active
           ? 'bg-[#3b82f6]/10 dark:bg-[#3b82f6]/20 text-[#3b82f6] dark:text-[#60a5fa] border-[#3b82f6]/30 dark:border-[#3b82f6]/40'
           : 'text-slate-500 dark:text-[#64748b] border-slate-200 dark:border-[#2e303a] hover:border-slate-300 dark:hover:border-[#3e4050] hover:text-slate-700 dark:hover:text-[#94a3b8]'

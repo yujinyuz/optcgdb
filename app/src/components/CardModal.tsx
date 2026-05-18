@@ -125,7 +125,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
       {hasPrev && (
         <button
           onClick={(e) => { e.stopPropagation(); goPrev() }}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 dark:bg-black/60 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white shadow-lg hover:scale-110 transition-all"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 dark:bg-black/60 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white shadow-lg hover:scale-105 transition-all"
           aria-label="Previous card"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -138,7 +138,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
       {hasNext && (
         <button
           onClick={(e) => { e.stopPropagation(); goNext() }}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 dark:bg-black/60 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white shadow-lg hover:scale-110 transition-all"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 dark:bg-black/60 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white shadow-lg hover:scale-105 transition-all"
           aria-label="Next card"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -206,7 +206,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
                   href={bestImageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center w-14 h-14 rounded-full bg-white dark:bg-[#1a1d2e] text-slate-400 dark:text-[#64748b] hover:text-[#3b82f6] shadow-md hover:scale-110 transition-all"
+                  className="flex items-center justify-center w-14 h-14 rounded-full bg-white dark:bg-[#1a1d2e] text-slate-400 dark:text-[#64748b] hover:text-[#3b82f6] shadow-md hover:scale-105 transition-all"
                   title="Open card image in new tab"
                 >
                   <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

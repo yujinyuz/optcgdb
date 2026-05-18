@@ -61,7 +61,7 @@ export default function CardCard({ card }: CardCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#1a1d2e] text-slate-400 dark:text-[#64748b] hover:text-[#3b82f6] shadow-sm hover:scale-110 transition-all"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#1a1d2e] text-slate-400 dark:text-[#64748b] hover:text-[#3b82f6] shadow-sm hover:scale-105 transition-all"
             title="Open card image in new tab"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
