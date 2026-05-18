@@ -88,9 +88,9 @@ export const COLOR_HEX: Record<string, string> = {
 };
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  Leader: '#eab308',
-  Character: '#3b82f6',
-  Event: '#ef4444',
-  Stage: '#22c55e',
-  Don: '#a855f7',
+  Leader: '#f59e0b',    // amber
+  Character: '#06b6d4', // cyan
+  Event: '#f97316',     // orange
+  Stage: '#8b5cf6',     // violet
+  Don: '#ec4899',       // pink
 };

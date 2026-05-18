@@ -1,10 +1,58 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAppStore } from './store'
 import Layout from './components/Layout'
 import CardGrid from './components/CardGrid'
 import CardDetail from './components/CardDetail'
 import CardModal from './components/CardModal'
+
+function OfflineIndicator() {
+  const offlineReady = useAppStore((state) => state.offlineReady)
+  const showOfflineToast = useAppStore((state) => state.showOfflineToast)
+  const dismissOfflineToast = useAppStore((state) => state.dismissOfflineToast)
+  const { needRefresh: updateAvailable } = useRegisterSW({
+    onRegisteredSW(_swUrl, registration) {
+      if (registration) useAppStore.getState().setOfflineReady(true)
+    },
+  })
+
+  useEffect(() => {
+    if (showOfflineToast) {
+      const timer = setTimeout(() => dismissOfflineToast(), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [showOfflineToast, dismissOfflineToast])
+
+  if (!showOfflineToast) return null
+
+  return (
+    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-lg px-3 py-2 shadow-lg text-sm animate-[fadeInUp_0.3s_ease-out]">
+      <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+      <span className="text-slate-600 dark:text-[#94a3b8]">
+        {offlineReady ? 'Ready for offline use' : 'Checking offline status...'}
+      </span>
+      {updateAvailable && (
+        <button
+          onClick={() => window.location.reload()}
+          className="ml-1 text-[#3b82f6] hover:underline font-medium"
+        >
+          Update
+        </button>
+      )}
+      <button
+        onClick={dismissOfflineToast}
+        className="ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  )
+}
 
 function App() {
   const init = useAppStore((state) => state.init)
@@ -51,6 +99,7 @@ function App() {
         {selectedCard && (
           <CardModal cardId={selectedCard.id} onClose={() => setSelectedCard(null)} />
         )}
+        <OfflineIndicator />
       </div>
     </BrowserRouter>
   )

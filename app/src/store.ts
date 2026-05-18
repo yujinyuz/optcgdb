@@ -87,6 +87,8 @@ interface AppState {
   selectedCard: Card | null;
   theme: Theme;
   preferredLanguage: PreferredLanguage;
+  offlineReady: boolean;
+  showOfflineToast: boolean;
   searching: boolean;
 
   init: () => Promise<void>;
@@ -96,6 +98,9 @@ interface AppState {
   setSelectedCard: (card: Card | null) => void;
   toggleTheme: () => void;
   setPreferredLanguage: (lang: PreferredLanguage) => void;
+  setOfflineReady: (ready: boolean) => void;
+  triggerOfflineToast: () => void;
+  dismissOfflineToast: () => void;
   search: (append?: boolean) => Promise<void>;
 }
 
@@ -114,6 +119,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedCard: null,
   theme: getInitialTheme(),
   preferredLanguage: getInitialLanguage(),
+  offlineReady: false,
+  showOfflineToast: false,
   searching: false,
 
   init: async () => {
@@ -202,6 +209,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.setItem('optcg-language', lang);
     set({ preferredLanguage: lang });
     get().search();
+  },
+
+  setOfflineReady: (ready) => {
+    set({ offlineReady: ready, showOfflineToast: ready });
+  },
+
+  triggerOfflineToast: () => {
+    set({ showOfflineToast: true });
+  },
+
+  dismissOfflineToast: () => {
+    set({ showOfflineToast: false });
   },
 
   search: async (append = false) => {
