@@ -149,7 +149,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
 
       <div
         ref={contentRef}
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#1a1d2e] shadow-2xl animate-[modalContentIn_200ms_var(--ease-out-expo)]"
+        className="relative w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#1a1d2e] shadow-2xl animate-[modalContentIn_200ms_var(--ease-out-expo)]"
         onClick={(e) => e.stopPropagation()}
         style={closing ? { animation: 'modalContentOut 150ms var(--ease-out-quart) forwards' } : undefined}
       >
