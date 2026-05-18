@@ -65,11 +65,6 @@ class QueryBuilder {
     return this;
   }
 
-  leftJoin(tableExpr: string) {
-    this.joins.push(`LEFT JOIN ${tableExpr}`);
-    return this;
-  }
-
   where(sql: string, ...params: (string | number | null)[]) {
     this.conditions.push({ sql, params });
     return this;
@@ -121,8 +116,7 @@ class QueryBuilder {
 function buildCardColumns(): string {
   return `c.id, c.name, c.rarity, c.category, c.cost, c.power, c.counter,
           c.effect, c.trigger_text, c.block_number,
-          c.colors_json, c.attributes_json, c.types_json,
-          ci.img_full_url as img_url`;
+          c.colors_json, c.attributes_json, c.types_json`;
 }
 
 function rowToCard(row: (string | number | null)[]): Record<string, unknown> {
@@ -133,7 +127,6 @@ function rowToCard(row: (string | number | null)[]): Record<string, unknown> {
     colors: parseJsonArray(row[10] as string | null),
     attributes: parseJsonArray(row[11] as string | null),
     types: parseJsonArray(row[12] as string | null),
-    img_url: row[13] || null,
   };
 }
 
@@ -151,9 +144,6 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
     );
     q.join('_search_ids _s ON c.id = _s.id');
   }
-
-  // LEFT JOIN english-asia image as default display image (keep card even if no image)
-  q.leftJoin("(SELECT card_id, img_full_url FROM card_images WHERE language = 'english-asia') ci ON c.id = ci.card_id");
 
   if (filters.categories?.length) {
     q.where(`c.category IN (${placeholders(filters.categories.length)})`, ...filters.categories);
@@ -230,10 +220,8 @@ function getCardById(db: Database, id: string): unknown | null {
   const result = db.exec(
     `SELECT c.id, c.name, c.rarity, c.category, c.cost, c.power, c.counter,
             c.effect, c.trigger_text, c.block_number,
-            c.colors_json, c.attributes_json, c.types_json,
-            ci.img_full_url as img_url
+            c.colors_json, c.attributes_json, c.types_json
      FROM cards c
-     LEFT JOIN (SELECT card_id, img_full_url FROM card_images WHERE language = 'english-asia') ci ON c.id = ci.card_id
      WHERE c.id = ?`,
     [id]
   );
@@ -271,10 +259,8 @@ function getCardVariants(db: Database, cardId: string): unknown[] {
   const baseId = cardId.replace(/_p\d+$/, '');
   const result = db.exec(
     `SELECT c.id, c.name, c.rarity, c.category, c.cost, c.power, c.counter, c.effect, c.trigger_text, c.block_number,
-            c.colors_json, c.attributes_json, c.types_json,
-            ci.img_full_url as img_url
+            c.colors_json, c.attributes_json, c.types_json
      FROM cards c
-     LEFT JOIN (SELECT card_id, img_full_url FROM card_images WHERE language = 'english-asia') ci ON c.id = ci.card_id
      WHERE c.id = ? OR c.id LIKE ?
      ORDER BY CASE WHEN c.id = ? THEN 0 ELSE 1 END, c.id`,
     [baseId, `${baseId}_p%`, baseId]
@@ -311,8 +297,6 @@ function getRelatedCards(db: Database, cardId: string, types: string[], limit: n
     const likeConditions = types.map(() => 'c.types_json LIKE ?').join(' OR ');
     q.where(`(${likeConditions})`, ...types.map((t) => `%"${t}"%`));
   }
-
-  q.leftJoin("(SELECT card_id, img_full_url FROM card_images WHERE language = 'english-asia') ci ON c.id = ci.card_id");
 
   const dataQ = q.select(buildCardColumns(), 'cards c', limit, 0);
   const dataRes = db.exec(dataQ.sql, dataQ.params);

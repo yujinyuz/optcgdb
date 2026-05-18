@@ -33,22 +33,43 @@ export function renderCardText(text: string | null | undefined): string {
 /**
  * Highlight OPTCG keywords in rendered HTML text.
  * Wraps keywords in a styled span without breaking existing HTML tags.
+ * Keywords extracted from english/english-asia source data.
  */
 function highlightKeywords(html: string): string {
-  // Build a regex that matches keywords outside of HTML tags
   const keywords = [
-    'DON!!', 'Counter', 'Blocker', 'Rush', 'Double Attack',
-    'Main', 'Once Per Turn', 'On Play', 'On KO',
-    'When Attacking', 'Activate', 'Banish',
-    'Start of Main', 'End of Main', 'Start of Turn', 'End of Turn',
-    'Your Turn', "Opponent's Turn", 'Life', 'Dominated',
-    'Trigger', 'Rest',
+    "DON!! -10", "DON!! -8", "DON!! -7", "DON!! -6", "DON!! -5",
+    "DON!! -4", "DON!! -3", "DON!! -2", "DON!! -1",
+    "DON!! x3", "DON!! x2", "DON!! x1",
+    "Activate: Main",
+    "On Your Opponent's Attack",
+    "End of Your Turn",
+    "Once Per Turn",
+    "Double Attack",
+    "Opponent's Turn",
+    "Rush: Character",
+    "When Attacking",
+    "Unblockable",
+    "Blocker",
+    "Counter",
+    "Trigger",
+    "Banish",
+    "On Block",
+    "On K.O.",
+    "On Play",
+    "Your Turn",
+    "Rush",
+    "Main",
   ]
-  // Sort by length (longest first) to avoid partial matches
-  keywords.sort((a, b) => b.length - a.length)
 
-  const pattern = keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
-  const regex = new RegExp(`(?<![<\\w/])\\b(${pattern})\\b(?![^<]*>)`, 'g')
+  // Build a single regex with all keywords (longest first to avoid partial matches)
+  const pattern = keywords.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+  const regex = new RegExp(`(?<![\\w])(${pattern})(?![\\w])`, 'g')
 
-  return html.replace(regex, '<span class="kw">$1</span>')
+  // Split into HTML tags and text segments, only replace in text
+  return html
+    .split(/(<[^>]+>)/g)
+    .map((segment) =>
+      segment.startsWith('<') ? segment : segment.replace(regex, '<span class="kw">$1</span>')
+    )
+    .join('')
 }

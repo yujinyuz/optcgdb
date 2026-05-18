@@ -13,7 +13,7 @@ export default defineConfig({
       manifest: {
         name: 'OPTCG DB',
         short_name: 'OPTCG',
-        description: 'Offline One Piece TCG card database browser',
+        description: 'offline first one piece card game database',
         theme_color: '#0f1117',
         background_color: '#0f1117',
         display: 'standalone',

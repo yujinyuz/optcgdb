@@ -21,7 +21,6 @@ export interface Card {
   attributes: string[];
   types: string[];
   block_number: number | null;
-  img_url: string | null;
 }
 
 export type CardCategory = 'Leader' | 'Character' | 'Event' | 'Stage' | 'Don';
