@@ -19,7 +19,6 @@ function SettingsMenu() {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
 
-  // Listen for beforeinstallprompt event (Chrome/Android)
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault()
@@ -30,14 +29,12 @@ function SettingsMenu() {
   }, [])
 
   const handleInstall = useCallback(() => {
-    if (isIOS) {
+    if (isIOS || !deferredPrompt) {
       setInstallTooltip(true)
       return
     }
-    if (deferredPrompt) {
-      deferredPrompt.prompt()
-      setDeferredPrompt(null)
-    }
+    deferredPrompt.prompt()
+    setDeferredPrompt(null)
   }, [isIOS, deferredPrompt])
 
   useEffect(() => {
@@ -159,7 +156,7 @@ function SettingsMenu() {
           </a>
         </div>
       )}
-      {/* iOS install tooltip */}
+      {/* Install tooltip */}
       {installTooltip && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40"
@@ -170,7 +167,7 @@ function SettingsMenu() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Install on iOS</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Install app</h3>
               <button
                 onClick={() => setInstallTooltip(false)}
                 className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -181,23 +178,42 @@ function SettingsMenu() {
               </button>
             </div>
             <ol className="text-sm text-slate-600 dark:text-[#cbd5e1] space-y-3">
-              <li className="flex items-start gap-2">
-                <span className="shrink-0 w-5 h-5 rounded-full bg-[#3b82f6] text-white text-xs font-bold flex items-center justify-center">1</span>
-                <span>Tap the <strong>Share</strong> button in Safari</span>
-              </li>
-              <li className="flex items-center justify-center py-2">
-                <svg className="w-8 h-8 text-[#007aff]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                </svg>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="shrink-0 w-5 h-5 rounded-full bg-[#3b82f6] text-white text-xs font-bold flex items-center justify-center">2</span>
-                <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="shrink-0 w-5 h-5 rounded-full bg-[#3b82f6] text-white text-xs font-bold flex items-center justify-center">3</span>
-                <span>Tap <strong>"Add"</strong> to confirm</span>
-              </li>
+              {isIOS ? (
+                <>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-[#3b82f6] text-white text-xs font-bold flex items-center justify-center">1</span>
+                    <span>Tap the <strong>Share</strong> button in Safari</span>
+                  </li>
+                  <li className="flex items-center justify-center py-2">
+                    <svg className="w-8 h-8 text-[#007aff]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-[#3b82f6] text-white text-xs font-bold flex items-center justify-center">2</span>
+                    <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-[#3b82f6] text-white text-xs font-bold flex items-center justify-center">3</span>
+                    <span>Tap <strong>"Add"</strong> to confirm</span>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-[#3b82f6] text-white text-xs font-bold flex items-center justify-center">1</span>
+                    <span>Tap the <strong>⋮</strong> menu in your browser</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-[#3b82f6] text-white text-xs font-bold flex items-center justify-center">2</span>
+                    <span>Tap <strong>"Add to Home Screen"</strong> or <strong>"Install app"</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-[#3b82f6] text-white text-xs font-bold flex items-center justify-center">3</span>
+                    <span>Tap <strong>"Install"</strong> to confirm</span>
+                  </li>
+                </>
+              )}
             </ol>
           </div>
         </div>

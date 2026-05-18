@@ -50,6 +50,76 @@ body {
 .dark .kw-counter {
   background: #ef4444;
 }
+.kw-main, .kw-when-attacking {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85em;
+  line-height: 1.4;
+  vertical-align: baseline;
+}
+.dark .kw-main, .dark .kw-when-attacking {
+  background: #3b82f6;
+}
+.kw-blocker {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: #ea580c;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85em;
+  line-height: 1.4;
+  vertical-align: baseline;
+}
+.dark .kw-blocker {
+  background: #f97316;
+}
+.kw-don {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: #1e293b;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85em;
+  line-height: 1.4;
+  vertical-align: baseline;
+}
+.dark .kw-don {
+  background: #334155;
+}
+.kw-on-play, .kw-on-opponent-attack {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85em;
+  line-height: 1.4;
+  vertical-align: baseline;
+}
+.dark .kw-on-play, .dark .kw-on-opponent-attack {
+  background: #3b82f6;
+}
+.kw-once-per-turn {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85em;
+  line-height: 1.4;
+  vertical-align: baseline;
+}
+.dark .kw-once-per-turn {
+  background: #ef4444;
+}
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(8px); }
