@@ -356,10 +356,10 @@ function getCardVariants(db: Database, cardId: string, preferredLanguage?: 'engl
       : [];
 
     const packsResult = db.exec(
-      `SELECT DISTINCT p.raw_title FROM packs p
+      `SELECT DISTINCT p.raw_title, p.language FROM packs p
        JOIN card_packs cp ON p.id = cp.pack_id
        WHERE cp.card_id = ?
-       ORDER BY p.id`,
+       ORDER BY CASE WHEN p.language = 'english' THEN 0 WHEN p.language = 'english-asia' THEN 1 ELSE 2 END, p.id`,
       [variantId]
     );
     const packs = packsResult[0]
