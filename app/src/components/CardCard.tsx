@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom'
 import type { Card } from '../types'
 import { COLOR_HEX, RARITY_SHORT, CATEGORY_COLORS } from '../types'
 import { decodeHtmlEntities } from '../utils'
+import { useAppStore } from '../store'
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
@@ -34,6 +34,7 @@ interface CardCardProps {
 }
 
 export default function CardCard({ card }: CardCardProps) {
+  const setSelectedCard = useAppStore((state) => state.setSelectedCard)
   const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
   const categoryColor = CATEGORY_COLORS[card.category]
 
@@ -46,10 +47,12 @@ export default function CardCard({ card }: CardCardProps) {
         }
 
   return (
-    <Link
-      to={`/card/${card.id}`}
-      className={`group flex flex-col rounded-xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-md shadow-black/5 dark:shadow-white/5 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-white/10 transition-all ${categoryColor ? 'border-l-4' : ''}`}
-      style={categoryColor ? { borderLeftColor: categoryColor } : undefined}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => setSelectedCard(card)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedCard(card) }}
+      className="group flex flex-col rounded-xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-md shadow-black/5 dark:shadow-white/5 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-white/10 transition-all cursor-pointer"
     >
       {/* Top strip: Cost | Power | Attribute */}
       <div className="flex items-center justify-between px-2 py-1.5 shrink-0 bg-slate-50 dark:bg-[#13151f]">
@@ -150,6 +153,6 @@ export default function CardCard({ card }: CardCardProps) {
           )}
         </div>
       </div>
-    </Link>
+    </div>
   )
 }

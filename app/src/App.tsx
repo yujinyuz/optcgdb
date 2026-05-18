@@ -4,11 +4,14 @@ import { useAppStore } from './store'
 import Layout from './components/Layout'
 import CardGrid from './components/CardGrid'
 import CardDetail from './components/CardDetail'
+import CardModal from './components/CardModal'
 
 function App() {
   const init = useAppStore((state) => state.init)
   const loading = useAppStore((state) => state.loading)
   const error = useAppStore((state) => state.error)
+  const selectedCard = useAppStore((state) => state.selectedCard)
+  const setSelectedCard = useAppStore((state) => state.setSelectedCard)
 
   useEffect(() => {
     init()
@@ -45,6 +48,9 @@ function App() {
             <Route path="/card/:id" element={<CardDetail />} />
           </Route>
         </Routes>
+        {selectedCard && (
+          <CardModal cardId={selectedCard.id} onClose={() => setSelectedCard(null)} />
+        )}
       </div>
     </BrowserRouter>
   )

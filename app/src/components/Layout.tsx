@@ -27,6 +27,22 @@ function ThemeToggle() {
   )
 }
 
+function LanguageToggle() {
+  const preferredLanguage = useAppStore((state) => state.preferredLanguage)
+  const setPreferredLanguage = useAppStore((state) => state.setPreferredLanguage)
+
+  return (
+    <button
+      type="button"
+      onClick={() => setPreferredLanguage(preferredLanguage === 'english' ? 'japanese' : 'english')}
+      className="p-1.5 rounded-lg text-xs font-bold text-slate-400 dark:text-[#64748b] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] transition-colors"
+      aria-label={`Switch to ${preferredLanguage === 'english' ? 'Japanese' : 'English'}`}
+    >
+      {preferredLanguage === 'english' ? 'EN' : 'JP'}
+    </button>
+  )
+}
+
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -37,7 +53,7 @@ export default function Layout() {
   }, [])
 
   return (
-    <div className="flex-1 flex min-h-dvh">
+    <div className="flex-1 flex min-h-screen overflow-hidden">
       {/* Mobile filter toggle */}
       <div className="lg:hidden fixed bottom-4 right-4 z-40">
         <button
@@ -59,7 +75,7 @@ export default function Layout() {
       <aside
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 fixed lg:sticky lg:top-0 left-0 top-0 z-30 h-dvh lg:h-dvh w-64 bg-slate-50 dark:bg-[#0f1117] border-r border-slate-200 dark:border-[#2e303a] overflow-y-auto transition-transform duration-200 lg:shrink-0`}
+        } lg:translate-x-0 fixed lg:sticky lg:top-0 left-0 top-0 z-30 h-screen lg:h-screen w-64 bg-slate-50 dark:bg-[#0f1117] border-r border-slate-200 dark:border-[#2e303a] overflow-y-auto transition-transform duration-200 lg:shrink-0`}
       >
         <div className="p-4">
           {/* Header: Title + Theme toggle */}
@@ -68,6 +84,7 @@ export default function Layout() {
               OPTCG DB
             </Link>
             <div className="flex items-center gap-2">
+              <LanguageToggle />
               <ThemeToggle />
               <button
                 onClick={() => setSidebarOpen(false)}
@@ -85,7 +102,7 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 overflow-y-auto">
         <Outlet />
       </main>
     </div>

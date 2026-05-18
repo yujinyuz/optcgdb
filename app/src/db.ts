@@ -22,6 +22,7 @@ export type QueryCardsFilters = {
   setPrefix?: string | null;
   blocks?: number[];
   hideParallels?: boolean;
+  preferredLanguage?: 'english' | 'japanese';
   limit?: number;
   offset?: number;
 };

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getCardById, getCardPacks, getCardVariants, getRelatedCards } from '../db'
+import { useAppStore } from '../store'
 import type { Card } from '../types'
 import { COLOR_HEX, RARITY_SHORT, CATEGORY_COLORS } from '../types'
 import { decodeHtmlEntities, renderCardText } from '../utils'
@@ -29,6 +30,7 @@ function getAttributeColor(attr: string): string {
 
 export default function CardDetail() {
   const { id } = useParams<{ id: string }>()
+  const preferredLanguage = useAppStore((state) => state.preferredLanguage)
 
   const [card, setCard] = useState<Card | null>(null)
   const [cardPacks, setCardPacks] = useState<{ packId: string; label: string; rawTitle: string }[]>([])
@@ -112,8 +114,10 @@ export default function CardDetail() {
   const baseId = card.id.replace(/_[pr]\d+$/, '')
   const categoryColor = CATEGORY_COLORS[card.category]
 
-  // Pick best image URL: English > English-Asia > Japanese
-  const languagePriority: Record<string, number> = { english: 0, 'english-asia': 1, japanese: 2 }
+  // Pick best image URL based on language preference
+  const languagePriority: Record<string, number> = preferredLanguage === 'japanese'
+    ? { japanese: 0, 'english-asia': 0, english: 1 }
+    : { english: 0, 'english-asia': 1, japanese: 2 }
   const bestImageUrl = cardVariants
     .flatMap((v) => v.images)
     .filter((img): img is { language: string; imgUrl: string } => !!img.imgUrl)
@@ -134,8 +138,7 @@ export default function CardDetail() {
 
       {/* Card — matches tile layout but expanded */}
       <div
-        className={`rounded-2xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-xl shadow-black/10 dark:shadow-black/30 ${categoryColor ? 'border-l-4' : ''}`}
-        style={categoryColor ? { borderLeftColor: categoryColor } : undefined}
+        className="rounded-2xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-xl shadow-black/10 dark:shadow-black/30"
       >
         {/* Top strip: Cost | Power | Attribute */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
@@ -327,15 +330,15 @@ export default function CardDetail() {
             Found in
           </h3>
           <div className="flex flex-wrap gap-1.5">
-            {cardPacks.map((pack) => (
-              <span
-                key={pack.packId}
-                className="text-[11px] bg-slate-100 dark:bg-[#13151f] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-0.5 text-slate-600 dark:text-[#94a3b8]"
-                title={pack.rawTitle}
-              >
-                {pack.label}
-              </span>
-            ))}
+                {cardPacks.map((pack) => (
+                  <span
+                    key={pack.packId}
+                    className="text-[11px] bg-slate-100 dark:bg-[#13151f] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-0.5 text-slate-600 dark:text-[#94a3b8]"
+                    title={pack.label}
+                  >
+                    {pack.rawTitle}
+                  </span>
+                ))}
           </div>
         </div>
       )}

@@ -29,6 +29,8 @@ export type QueryCardsFilters = {
   counterMax?: number | null;
   setPrefix?: string | null;
   blocks?: number[];
+  hideParallels?: boolean;
+  preferredLanguage?: 'english' | 'japanese';
   limit?: number;
   offset?: number;
 };
@@ -185,7 +187,10 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
   const countRes = db.exec(countQ.sql, countQ.params);
   const total = (countRes[0]?.values[0]?.[0] as number) || 0;
 
-  const imgSubquery = `(SELECT img_full_url FROM card_images WHERE card_id = c.id AND img_full_url IS NOT NULL AND img_full_url != '' ORDER BY CASE language WHEN 'english' THEN 1 WHEN 'english-asia' THEN 2 WHEN 'japanese' THEN 3 ELSE 4 END LIMIT 1)`;
+  const langOrder = filters.preferredLanguage === 'japanese'
+    ? "CASE language WHEN 'japanese' THEN 1 WHEN 'english-asia' THEN 1 WHEN 'english' THEN 2 ELSE 3 END"
+    : "CASE language WHEN 'english' THEN 1 WHEN 'english-asia' THEN 2 WHEN 'japanese' THEN 3 ELSE 4 END";
+  const imgSubquery = `(SELECT img_full_url FROM card_images WHERE card_id = c.id AND img_full_url IS NOT NULL AND img_full_url != '' ORDER BY ${langOrder} LIMIT 1)`;
 
   const dataQ = q.select(buildCardColumns() + `, ${imgSubquery} as img_url`, 'cards c', limit, offset);
   const dataRes = db.exec(dataQ.sql, dataQ.params);

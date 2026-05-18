@@ -4,12 +4,20 @@ import type { Card, Pack, CardFilters } from './types';
 import { DEFAULT_FILTERS } from './types';
 
 type Theme = 'light' | 'dark';
+type PreferredLanguage = 'english' | 'japanese';
 
 function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'dark';
   const stored = localStorage.getItem('optcg-theme') as Theme | null;
   if (stored === 'light' || stored === 'dark') return stored;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function getInitialLanguage(): PreferredLanguage {
+  if (typeof window === 'undefined') return 'english';
+  const stored = localStorage.getItem('optcg-language') as PreferredLanguage | null;
+  if (stored === 'english' || stored === 'japanese') return stored;
+  return 'english';
 }
 
 /* ── URL sync helpers ─────────────────────────────────────────── */
@@ -78,6 +86,7 @@ interface AppState {
   hasMore: boolean;
   selectedCard: Card | null;
   theme: Theme;
+  preferredLanguage: PreferredLanguage;
   searching: boolean;
 
   init: () => Promise<void>;
@@ -86,6 +95,7 @@ interface AppState {
   loadMore: () => Promise<void>;
   setSelectedCard: (card: Card | null) => void;
   toggleTheme: () => void;
+  setPreferredLanguage: (lang: PreferredLanguage) => void;
   search: (append?: boolean) => Promise<void>;
 }
 
@@ -103,6 +113,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   hasMore: false,
   selectedCard: null,
   theme: getInitialTheme(),
+  preferredLanguage: getInitialLanguage(),
   searching: false,
 
   init: async () => {
@@ -139,7 +150,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   loadMore: async () => {
-    const { offset, limit, totalCards, cards, filters, searching } = get();
+    const { offset, limit, totalCards, cards, filters, searching, preferredLanguage } = get();
     if (searching || cards.length >= totalCards) return;
 
     const newOffset = offset + limit;
@@ -160,6 +171,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           counterMax: filters.counterMax,
           setPrefix: filters.setPrefix || undefined,
           blocks: filters.blocks.length ? filters.blocks : undefined,
+          preferredLanguage,
           limit,
           offset: newOffset,
         });
@@ -186,8 +198,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
+  setPreferredLanguage: (lang) => {
+    localStorage.setItem('optcg-language', lang);
+    set({ preferredLanguage: lang });
+    get().search();
+  },
+
   search: async (append = false) => {
-    const { filters, limit, offset } = get();
+    const { filters, limit, offset, preferredLanguage } = get();
     set({ searching: true });
       try {
         const { cards, total } = await queryCards({
@@ -204,6 +222,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           counterMax: filters.counterMax,
           setPrefix: filters.setPrefix || undefined,
           blocks: filters.blocks.length ? filters.blocks : undefined,
+          preferredLanguage,
           limit,
           offset,
         });
