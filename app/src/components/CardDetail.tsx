@@ -16,6 +16,17 @@ function getAttributeIcon(attr: string): string {
   }
 }
 
+function getAttributeColor(attr: string): string {
+  switch (attr) {
+    case 'Strike': return '#eab308'
+    case 'Slash': return '#3b82f6'
+    case 'Ranged': return '#22c55e'
+    case 'Wisdom': return '#a855f7'
+    case 'Special': return '#e74c3c'
+    default: return '#eab308'
+  }
+}
+
 function getRarityColor(rarity: string): string {
   switch (rarity) {
     case 'Common': return '#64748b'
@@ -161,7 +172,10 @@ export default function CardDetail() {
 
             {/* Attribute */}
             {card.attributes.length > 0 && (
-              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500 text-white text-sm font-bold shadow-sm">
+              <span
+                className="inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-bold shadow-sm"
+                style={{ backgroundColor: getAttributeColor(card.attributes[0]) }}
+              >
                 {getAttributeIcon(card.attributes[0])}
               </span>
             )}

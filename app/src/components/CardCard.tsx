@@ -18,6 +18,17 @@ function getAttributeIcon(attr: string): string {
   }
 }
 
+function getAttributeColor(attr: string): string {
+  switch (attr) {
+    case 'Strike': return '#eab308'
+    case 'Slash': return '#3b82f6'
+    case 'Ranged': return '#22c55e'
+    case 'Wisdom': return '#a855f7'
+    case 'Special': return '#e74c3c'
+    default: return '#eab308'
+  }
+}
+
 interface CardCardProps {
   card: Card
 }
@@ -51,7 +62,10 @@ export default function CardCard({ card }: CardCardProps) {
             </span>
           )}
           {card.attributes.length > 0 && (
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-500 text-white text-xs font-bold shadow-sm">
+            <span
+              className="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold shadow-sm"
+              style={{ backgroundColor: getAttributeColor(card.attributes[0]) }}
+            >
               {getAttributeIcon(card.attributes[0])}
             </span>
           )}
