@@ -34,7 +34,7 @@ export default function CardCard({ card }: CardCardProps) {
       <div className="flex flex-1 min-h-0">
         {/* Counter — tiny vertical strip on left edge */}
         {card.counter !== null && (
-          <div className="shrink-0 w-3.5 flex items-center justify-center bg-[#3498db]/10 dark:bg-[#3498db]/10 border-r border-slate-100 dark:border-[#2e303a]/30">
+          <div className="shrink-0 w-3.5 flex items-center justify-center border-r border-slate-100 dark:border-[#2e303a]/30">
             <span
               className="text-[7px] font-bold text-[#3498db] tracking-tight"
               style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
