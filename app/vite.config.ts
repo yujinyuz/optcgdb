@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg', 'sql-wasm-browser.wasm', 'optcg.db'],
+      includeAssets: ['favicon.svg', 'app-icon.svg', 'icons.svg', 'sql-wasm-browser.wasm', 'optcg.db'],
       manifest: {
         name: 'OPTCG DB',
         short_name: 'OPTCG',
@@ -21,16 +21,10 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/icons.svg',
-            sizes: '192x192',
+            src: '/app-icon.svg',
+            sizes: 'any',
             type: 'image/svg+xml',
-            purpose: 'any',
-          },
-          {
-            src: '/icons.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any',
+            purpose: 'any maskable',
           },
         ],
       },
