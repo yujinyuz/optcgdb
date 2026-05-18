@@ -21,6 +21,7 @@ export interface Card {
   attributes: string[];
   types: string[];
   block_number: number | null;
+  parallel_json: string[];
 }
 
 export type CardCategory = 'Leader' | 'Character' | 'Event' | 'Stage' | 'Don';

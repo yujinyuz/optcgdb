@@ -33,29 +33,30 @@ CREATE TABLE IF NOT EXISTS cards (
     colors_json TEXT NOT NULL DEFAULT '[]',       -- JSON array of colors
     attributes_json TEXT NOT NULL DEFAULT '[]',    -- JSON array of attributes
     types_json TEXT NOT NULL DEFAULT '[]',         -- JSON array of types
+    parallel_json TEXT NOT NULL DEFAULT '[]',      -- JSON array of parallel variant IDs
     search_text TEXT                 -- Pre-built FTS content
 );
 
 -- Card packs: which packs (from which language source) contain each card.
--- A card can appear in multiple packs across both English and English-Asia.
+-- References both base IDs and parallel variant IDs (_p1, _p2, etc.).
+-- No FK to cards.id since variant IDs may not exist in the cards table.
 CREATE TABLE IF NOT EXISTS card_packs (
     card_id TEXT NOT NULL,
     pack_id TEXT NOT NULL,
     language TEXT NOT NULL,
     PRIMARY KEY (card_id, pack_id, language),
-    FOREIGN KEY (card_id) REFERENCES cards(id),
     FOREIGN KEY (pack_id, language) REFERENCES packs(id, language)
 );
 
 -- Card images: image URLs per language variant.
--- English-Asia is the primary/default variant.
+-- References both base IDs and parallel variant IDs.
+-- No FK to cards.id since variant IDs may not exist in the cards table.
 CREATE TABLE IF NOT EXISTS card_images (
     card_id TEXT NOT NULL,
     language TEXT NOT NULL,
     img_url TEXT,
     img_full_url TEXT,
-    PRIMARY KEY (card_id, language),
-    FOREIGN KEY (card_id) REFERENCES cards(id)
+    PRIMARY KEY (card_id, language)
 );
 
 -- Card colors (many-to-many, deduplicated across languages)

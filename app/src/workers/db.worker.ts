@@ -118,7 +118,7 @@ class QueryBuilder {
 function buildCardColumns(): string {
   return `c.id, c.name, c.rarity, c.category, c.cost, c.power, c.counter,
           c.effect, c.trigger_text, c.block_number,
-          c.colors_json, c.attributes_json, c.types_json`;
+          c.colors_json, c.attributes_json, c.types_json, c.parallel_json`;
 }
 
 function rowToCard(row: (string | number | null)[]): Record<string, unknown> {
@@ -129,6 +129,7 @@ function rowToCard(row: (string | number | null)[]): Record<string, unknown> {
     colors: parseJsonArray(row[10] as string | null),
     attributes: parseJsonArray(row[11] as string | null),
     types: parseJsonArray(row[12] as string | null),
+    parallel_json: parseJsonArray(row[13] as string | null),
   };
 }
 
@@ -170,11 +171,7 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
     q.where(`c.id IN (SELECT card_id FROM card_colors WHERE color IN (${placeholders(filters.colors.length)}))`, ...filters.colors);
   }
 
-  // Deduplicate: one result per "base" card ID (strip _p1, _r1, etc. suffixes).
-  // MIN(id) picks the base card alphabetically (EB02-010 < EB02-010_p1).
-  // If only a parallel exists (no base), MIN picks that parallel.
-  // Dedup is applied AFTER all filters, so rarity filters on parallels work correctly.
-  q.dedup('cards', "CASE WHEN INSTR(c.id, '_') > 0 THEN SUBSTR(c.id, 1, INSTR(c.id, '_') - 1) ELSE c.id END");
+  // Cards table now stores one row per base ID; no dedup needed.
 
   const limit = filters.limit || 50;
   const offset = filters.offset || 0;
@@ -221,16 +218,20 @@ function queryBlocks(db: Database): number[] {
 }
 
 function getCardById(db: Database, id: string): unknown | null {
+  const baseId = id.split('_')[0];
   const result = db.exec(
-    `SELECT c.id, c.name, c.rarity, c.category, c.cost, c.power, c.counter,
-            c.effect, c.trigger_text, c.block_number,
-            c.colors_json, c.attributes_json, c.types_json
-     FROM cards c
-     WHERE c.id = ?`,
-    [id]
+    `SELECT ${buildCardColumns().replace(/c\./g, '')}
+     FROM cards
+     WHERE id = ?`,
+    [baseId]
   );
   if (!result[0]?.values[0]) return null;
-  return rowToCard(result[0].values[0]);
+  const card = rowToCard(result[0].values[0]);
+  // If querying a variant ID, override the id field
+  if (id !== baseId) {
+    card.id = id;
+  }
+  return card;
 }
 
 function getCardPacks(db: Database, cardId: string): unknown[] {
@@ -260,20 +261,21 @@ function getCardImages(db: Database, cardId: string): unknown[] {
 }
 
 function getCardVariants(db: Database, cardId: string): unknown[] {
-  const baseId = cardId.replace(/_p\d+$/, '');
+  // Get the base card row (cards table stores only base IDs)
   const result = db.exec(
-    `SELECT c.id, c.name, c.rarity, c.category, c.cost, c.power, c.counter, c.effect, c.trigger_text, c.block_number,
-            c.colors_json, c.attributes_json, c.types_json
-     FROM cards c
-     WHERE c.id = ? OR c.id LIKE ?
-     ORDER BY CASE WHEN c.id = ? THEN 0 ELSE 1 END, c.id`,
-    [baseId, `${baseId}_p%`, baseId]
+    `SELECT ${buildCardColumns().replace(/c\./g, '')}
+     FROM cards
+     WHERE id = ?`,
+    [cardId]
   );
-  if (!result[0]) return [];
+  if (!result[0] || result[0].values.length === 0) return [];
+
+  const baseCard = rowToCard(result[0].values[0]);
+  const parallelIds = (baseCard.parallel_json as string[]) || [];
 
   const variants: unknown[] = [];
-  for (const row of result[0].values) {
-    const variantId = row[0] as string;
+  // Include the base card itself as the first variant
+  for (const variantId of parallelIds) {
     const imagesResult = db.exec(
       `SELECT language, img_full_url FROM card_images
        WHERE card_id = ? AND img_full_url IS NOT NULL AND img_full_url != ''
@@ -285,7 +287,7 @@ function getCardVariants(db: Database, cardId: string): unknown[] {
       : [];
 
     variants.push({
-      card: rowToCard(row),
+      card: variantId === cardId ? baseCard : { ...baseCard, id: variantId },
       images,
     });
   }
