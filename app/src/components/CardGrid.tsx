@@ -12,7 +12,7 @@ export default function CardGrid() {
   return (
     <div className="px-4 sm:px-6 py-6">
 
-      <div className="flex items-center justify-between mb-4 mt-3 sticky top-0 z-10 bg-slate-50 dark:bg-[#0f1117] py-2 -mx-4 sm:-mx-6 px-4 sm:px-6 -mt-6 pt-6">
+      <div className="flex items-center justify-between mb-3">
         <span className="text-sm text-slate-600 dark:text-[#94a3b8]">
           {searching && cards.length === 0 ? (
             'Searching...'
