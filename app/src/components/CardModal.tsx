@@ -272,7 +272,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
             {/* Category -> Name -> Type (always shown, like card list) */}
             <div className="px-4 pb-3">
               <div
-                className="text-[10px] font-bold tracking-wider uppercase text-center"
+                className="text-[10px] font-bold tracking-[0.3em] uppercase text-center"
                 style={categoryColor ? { color: categoryColor } : undefined}
               >
                 {card.category === 'Don' ? 'DON!!' : card.category}

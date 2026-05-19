@@ -188,7 +188,7 @@ export default function CardDetail() {
         <div className="px-4 pb-3">
           {/* Category */}
           <div
-            className="text-xs font-bold tracking-[0.15em] uppercase text-center"
+            className="text-xs font-bold tracking-[0.3em] uppercase text-center"
             style={categoryColor ? { color: categoryColor } : undefined}
           >
             {card.category === 'Don' ? 'DON!!' : card.category}

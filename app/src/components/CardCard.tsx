@@ -85,7 +85,7 @@ export default function CardCard({ card }: CardCardProps) {
       <div className="flex-1 px-2.5 py-2 flex flex-col min-h-0">
         {/* Category */}
         <div
-          className="text-[10px] font-bold tracking-wider uppercase text-center"
+          className="text-[10px] font-bold tracking-[0.3em] uppercase text-center"
           style={categoryColor ? { color: categoryColor } : undefined}
         >
           {card.category === 'Don' ? 'DON!!' : card.category}
