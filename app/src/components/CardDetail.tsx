@@ -13,6 +13,8 @@ export default function CardDetail() {
   const [card, setCard] = useState<Card | null>(null)
   const [cardPacks, setCardPacks] = useState<{ packId: string; label: string; rawTitle: string }[]>([])
   const [cardVariants, setCardVariants] = useState<{ card: Card; images: { language: string; imgUrl: string | null }[] }[]>([])
+  const [exclusiveCount, setExclusiveCount] = useState(0)
+  const [exclusiveLabel, setExclusiveLabel] = useState('')
   const [relatedCards, setRelatedCards] = useState<Card[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -35,14 +37,16 @@ export default function CardDetail() {
         setCard(result)
 
         if (result) {
-          const [packs, variants, related] = await Promise.all([
+          const [packs, variantsResult, related] = await Promise.all([
             getCardPacks(result.id),
             getCardVariants(result.base_id, preferredLanguage),
             getRelatedCards(result.id, result.types, 8),
           ])
           if (cancelled) return
           setCardPacks(packs)
-          setCardVariants(variants)
+          setCardVariants(variantsResult.variants)
+          setExclusiveCount(variantsResult.exclusiveCount)
+          setExclusiveLabel(preferredLanguage === 'japanese' ? 'EN' : 'JP')
           setRelatedCards(related)
         }
 
@@ -303,6 +307,11 @@ export default function CardDetail() {
               )
             })}
           </div>
+          {exclusiveCount > 0 && (
+            <p className="mt-2 text-[10px] text-slate-400 dark:text-[#64748b] italic">
+              ({exclusiveCount} {exclusiveLabel} exclusive)
+            </p>
+          )}
         </div>
       )}
 

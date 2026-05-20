@@ -103,7 +103,7 @@ export async function getRelatedCards(cardId: string, types: string[], limit?: n
   return result;
 }
 
-export async function getCardVariants(cardId: string, preferredLanguage?: 'english' | 'japanese'): Promise<{ card: Card; images: { language: string; imgUrl: string | null }[]; packs: string[] }[]> {
-  const result = await sendRequest<{ card: Card; images: { language: string; imgUrl: string | null }[]; packs: string[] }[]>('getCardVariants', { cardId, preferredLanguage });
+export async function getCardVariants(cardId: string, preferredLanguage?: 'english' | 'japanese'): Promise<{ variants: { card: Card; images: { language: string; imgUrl: string | null }[]; packs: string[] }[]; exclusiveCount: number }> {
+  const result = await sendRequest<{ variants: { card: Card; images: { language: string; imgUrl: string | null }[]; packs: string[] }[]; exclusiveCount: number }>('getCardVariants', { cardId, preferredLanguage });
   return result;
 }

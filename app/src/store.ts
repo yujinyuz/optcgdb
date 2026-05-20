@@ -250,7 +250,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setLoadExternalImages: (enabled) => {
     localStorage.setItem('optcg-external-images', String(enabled));
-    set({ loadExternalImages: enabled });
+    if (enabled) {
+      localStorage.setItem('optcg-show-alternate-arts', 'true');
+      set({ loadExternalImages: enabled, showAlternateArts: true });
+    } else {
+      set({ loadExternalImages: enabled });
+    }
     get().search();
   },
 

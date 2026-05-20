@@ -315,7 +315,7 @@ function getCardImages(db: Database, cardId: string): unknown[] {
   return result[0].values.map((row) => ({ language: row[0], imgUrl: row[1] }));
 }
 
-function getCardVariants(db: Database, cardId: string, preferredLanguage?: 'english' | 'japanese'): unknown[] {
+function getCardVariants(db: Database, cardId: string, preferredLanguage?: 'english' | 'japanese'): { variants: unknown[]; exclusiveCount: number } {
   // Get base_id for the given card
   const baseIdResult = db.exec(
     `SELECT base_id FROM cards WHERE id = ?`,
@@ -343,9 +343,10 @@ function getCardVariants(db: Database, cardId: string, preferredLanguage?: 'engl
     [baseId]
   );
 
-  if (!variantsResult[0]) return [];
+  if (!variantsResult[0]) return { variants: [], exclusiveCount: 0 };
 
   const variants: unknown[] = [];
+  let exclusiveCount = 0;
   for (const row of variantsResult[0].values) {
     const variantCard = rowToCard(row);
 
@@ -363,8 +364,18 @@ function getCardVariants(db: Database, cardId: string, preferredLanguage?: 'engl
       ? imagesResult[0].values.map((imgRow) => ({ language: imgRow[0], imgUrl: imgRow[1] }))
       : [];
 
-    // Skip variants with no images in the preferred language
-    if (images.length === 0) continue;
+    if (images.length === 0) {
+      // Check if this variant has images in other languages
+      const allImagesResult = db.exec(
+        `SELECT DISTINCT language FROM card_images
+         WHERE card_id = ? AND img_full_url IS NOT NULL AND img_full_url != ''`,
+        [variantCard.id as string]
+      );
+      if (allImagesResult[0] && allImagesResult[0].values.length > 0) {
+        exclusiveCount++;
+      }
+      continue;
+    }
 
     const packsResult = db.exec(
       `SELECT DISTINCT p.raw_title, p.language FROM packs p
@@ -384,7 +395,7 @@ function getCardVariants(db: Database, cardId: string, preferredLanguage?: 'engl
     });
   }
 
-  return variants;
+  return { variants, exclusiveCount };
 }
 
 function getRelatedCards(db: Database, cardId: string, types: string[], limit: number): unknown[] {

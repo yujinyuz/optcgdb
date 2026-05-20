@@ -15,6 +15,8 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
   const [card, setCard] = useState<Card | null>(null)
   const [cardPacks, setCardPacks] = useState<{ packId: string; label: string; rawTitle: string }[]>([])
   const [cardVariants, setCardVariants] = useState<{ card: Card; images: { language: string; imgUrl: string | null }[]; packs: string[] }[]>([])
+  const [exclusiveCount, setExclusiveCount] = useState(0)
+  const [exclusiveLabel, setExclusiveLabel] = useState('')
   const [loading, setLoading] = useState(true)
   const [closing, setClosing] = useState(false)
   const [zoomedImg, setZoomedImg] = useState<string | null>(null)
@@ -47,13 +49,15 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
         setCard(result)
 
         if (result) {
-          const [packs, variants] = await Promise.all([
+          const [packs, variantsResult] = await Promise.all([
             getCardPacks(result.id),
             getCardVariants(result.base_id, preferredLanguage),
           ])
           if (cancelled) return
           setCardPacks(packs)
-          setCardVariants(variants)
+          setCardVariants(variantsResult.variants)
+          setExclusiveCount(variantsResult.exclusiveCount)
+          setExclusiveLabel(preferredLanguage === 'japanese' ? 'EN' : 'JP')
         }
 
         if (!cancelled) setLoading(false)
@@ -428,6 +432,11 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
                     )
                   })}
                 </div>
+              )}
+              {exclusiveCount > 0 && (
+                <p className="mt-2 text-[10px] text-slate-400 dark:text-[#64748b] italic">
+                  ({exclusiveCount} {exclusiveLabel} exclusive)
+                </p>
               )}
             </div>
           )}
