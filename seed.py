@@ -106,12 +106,11 @@ def build_block_number_map() -> dict[str, int]:
 def seed_cards(conn: sqlite3.Connection, language: str, packs: dict, block_map: dict[str, int], is_primary: bool, existing_ids: set[str] | None = None):
     """Insert card data for all packs in a language from local files.
 
-    Cards are grouped by base ID (e.g. OP01-001). The cards table stores
-    one row per base ID with a parallel_json array of variant IDs
-    (OP01-001_p1, OP01-001_p2, etc.).
+    Each card (base + variants) gets its own row in the cards table with a
+    base_id column for grouping. No parallel_json needed.
 
-    All card IDs (base + variants) are inserted into card_packs,
-    card_images, junction tables, and FTS.
+    All card IDs are inserted into card_packs, card_images, junction tables,
+    and FTS.
 
     existing_ids: set of base_ids that already exist before this pass
                   (used by english-asia to identify gap-fill cards)
@@ -129,56 +128,51 @@ def seed_cards(conn: sqlite3.Connection, language: str, packs: dict, block_map: 
             continue
         all_cards.extend(load_json(card_file))
 
-    # --- Pass 2: group by base ID, insert base cards into `cards` table ---
-    base_cards: dict[str, dict] = {}              # base_id -> canonical card data
-    base_parallels: dict[str, list[str]] = {}     # base_id -> [variant_id, ...]
-
+    # --- Pass 2: determine canonical data per base_id ---
+    # For primary/gap-fill languages, insert rows into cards table.
+    # Pick canonical card data (prefer non-parallel variants for name/effect/etc).
+    base_cards: dict[str, dict] = {}
     for card in all_cards:
         card_id = card["id"]
-        # Extract base ID: everything before the first '_'
         base_id = card_id.split("_")[0] if "_" in card_id else card_id
-
         if base_id not in base_cards:
             base_cards[base_id] = card
-            base_parallels[base_id] = []
-
-        # Prefer base cards (no _p suffix) over variants for the canonical name
         if card_id == base_id:
             base_cards[base_id] = card
 
-        if card_id not in base_parallels[base_id]:
-            base_parallels[base_id].append(card_id)
+    # Insert every card as its own row (only for primary or gap-fill)
+    for card in all_cards:
+        card_id = card["id"]
+        base_id = card_id.split("_")[0] if "_" in card_id else card_id
 
-    for base_id, card in base_cards.items():
-        # Only primary or gap-fill languages insert into cards table
         if not is_primary:
             if language == "english-asia" and existing_ids and base_id in existing_ids:
                 continue
             if language != "english-asia":
                 continue
 
-        block_number = block_map.get(base_id, card.get("block_number"))
-        parallel_ids = sorted(base_parallels[base_id])
+        canonical = base_cards[base_id]
+        block_number = block_map.get(base_id, canonical.get("block_number"))
 
         cursor = conn.execute(
             """INSERT OR REPLACE INTO cards
-               (id, name, rarity, category, cost, power, counter, effect, trigger_text, block_number, colors_json, attributes_json, types_json, parallel_json)
+               (id, base_id, name, rarity, category, cost, power, counter, effect, trigger_text, block_number, colors_json, attributes_json, types_json)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
+                card_id,
                 base_id,
-                decode_html(card.get("name", "")),
-                card.get("rarity", ""),
-                card.get("category", ""),
-                card.get("cost"),
-                card.get("power"),
-                card.get("counter"),
-                decode_html(card.get("effect") or ""),
-                decode_html(card.get("trigger") or ""),
+                decode_html(canonical.get("name", "")),
+                canonical.get("rarity", ""),
+                canonical.get("category", ""),
+                canonical.get("cost"),
+                canonical.get("power"),
+                canonical.get("counter"),
+                decode_html(canonical.get("effect") or ""),
+                decode_html(canonical.get("trigger") or ""),
                 block_number,
-                json.dumps(card.get("colors", [])),
-                json.dumps(card.get("attributes", [])),
-                json.dumps([decode_html(t) for t in card.get("types", [])]),
-                json.dumps(parallel_ids),
+                json.dumps(canonical.get("colors", [])),
+                json.dumps(canonical.get("attributes", [])),
+                json.dumps([decode_html(t) for t in canonical.get("types", [])]),
             ),
         )
         if cursor.rowcount > 0:
@@ -269,7 +263,7 @@ def seed_cards(conn: sqlite3.Connection, language: str, packs: dict, block_map: 
         total_cards += 1
 
     conn.commit()
-    print(f"  {language}: {total_cards} cards processed, {new_base_cards} new base cards")
+    print(f"  {language}: {total_cards} cards processed, {new_base_cards} new unique")
     return total_cards, new_base_cards
 
 
@@ -365,12 +359,14 @@ def main():
     pack_count = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM cards")
     card_count = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(DISTINCT base_id) FROM cards")
+    unique_count = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM card_packs")
     pack_memberships = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM card_images")
     image_count = cur.fetchone()[0]
 
-    print(f"\n✓ Database seeded: {pack_count} packs, {card_count} unique cards")
+    print(f"\n✓ Database seeded: {pack_count} packs, {unique_count} unique cards ({card_count} total rows)")
     print(f"  Pack memberships: {pack_memberships}")
     print(f"  Image variants: {image_count}")
 

@@ -102,6 +102,7 @@ interface AppState {
   theme: Theme;
   preferredLanguage: PreferredLanguage;
   loadExternalImages: boolean;
+  showAlternateArts: boolean;
   offlineReady: boolean;
   showOfflineToast: boolean;
   searching: boolean;
@@ -116,6 +117,7 @@ interface AppState {
   toggleTheme: () => void;
   setPreferredLanguage: (lang: PreferredLanguage) => void;
   setLoadExternalImages: (enabled: boolean) => void;
+  setShowAlternateArts: (enabled: boolean) => void;
   setOfflineReady: (ready: boolean) => void;
   triggerOfflineToast: () => void;
   dismissOfflineToast: () => void;
@@ -139,6 +141,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   theme: getInitialTheme(),
   preferredLanguage: getInitialLanguage(),
   loadExternalImages: localStorage.getItem('optcg-external-images') === 'true',
+  showAlternateArts: localStorage.getItem('optcg-show-alternate-arts') === 'true',
   offlineReady: false,
   showOfflineToast: false,
   searching: false,
@@ -190,7 +193,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   loadMore: async () => {
-    const { offset, limit, totalCards, cards, filters, searching, preferredLanguage } = get();
+    const { offset, limit, totalCards, cards, filters, searching, preferredLanguage, showAlternateArts, loadExternalImages } = get();
     if (searching || cards.length >= totalCards) return;
 
     const newOffset = offset + limit;
@@ -213,6 +216,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         sets: filters.sets.length ? filters.sets : undefined,
         blocks: filters.blocks.length ? filters.blocks : undefined,
         preferredLanguage,
+        hideParallels: !(loadExternalImages && showAlternateArts),
         limit,
         offset: newOffset,
       });
@@ -247,6 +251,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   setLoadExternalImages: (enabled) => {
     localStorage.setItem('optcg-external-images', String(enabled));
     set({ loadExternalImages: enabled });
+    get().search();
+  },
+
+  setShowAlternateArts: (enabled) => {
+    localStorage.setItem('optcg-show-alternate-arts', String(enabled));
+    set({ showAlternateArts: enabled });
+    get().search();
   },
 
   setOfflineReady: (ready) => {
@@ -262,7 +273,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   search: async (append = false) => {
-    const { filters, limit, offset, preferredLanguage } = get();
+    const { filters, limit, offset, preferredLanguage, showAlternateArts, loadExternalImages } = get();
     set({ searching: true });
     try {
       const { cards, total } = await queryCards({
@@ -281,6 +292,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         sets: filters.sets.length ? filters.sets : undefined,
         blocks: filters.blocks.length ? filters.blocks : undefined,
         preferredLanguage,
+        hideParallels: !(loadExternalImages && showAlternateArts),
         limit,
         offset,
       });

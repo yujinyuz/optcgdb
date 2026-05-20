@@ -9,6 +9,7 @@ export interface Pack {
 
 export interface Card {
   id: string;
+  base_id: string;
   name: string;
   rarity: string;
   category: string;
@@ -21,7 +22,6 @@ export interface Card {
   attributes: string[];
   types: string[];
   block_number: number | null;
-  parallel_json: string[];
   img_url: string | null;
 }
 

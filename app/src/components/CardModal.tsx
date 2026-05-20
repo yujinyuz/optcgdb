@@ -49,7 +49,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
         if (result) {
           const [packs, variants] = await Promise.all([
             getCardPacks(result.id),
-            getCardVariants(result.id, preferredLanguage),
+            getCardVariants(result.base_id, preferredLanguage),
           ])
           if (cancelled) return
           setCardPacks(packs)
@@ -64,7 +64,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
 
     loadCard()
     return () => { cancelled = true }
-  }, [cardId])
+  }, [cardId, preferredLanguage])
 
   useEffect(() => {
     if (contentRef.current) contentRef.current.scrollTop = 0
@@ -117,16 +117,25 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
   const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
   const costBg = costCircleBg(card)
 
-  const baseId = card.id.replace(/_[pr]\d+$/, '')
   const categoryColor = CATEGORY_COLORS[card.category]
 
   const languagePriority: Record<string, number> = preferredLanguage === 'japanese'
     ? { japanese: 0, 'english-asia': 0, english: 1 }
     : { english: 0, 'english-asia': 1, japanese: 2 }
-  const bestImageUrl = cardVariants
+
+  // Find the current variant's images first
+  const currentVariant = cardVariants.find((v) => v.card.id === card.id)
+  const currentImages = currentVariant?.images.filter((img): img is { language: string; imgUrl: string } => !!img.imgUrl) ?? []
+  const currentBestImage = currentImages
+    .sort((a, b) => (languagePriority[a.language] ?? 3) - (languagePriority[b.language] ?? 3))[0]?.imgUrl ?? null
+
+  // Fallback: pick best image from all variants
+  const fallbackImage = cardVariants
     .flatMap((v) => v.images)
     .filter((img): img is { language: string; imgUrl: string } => !!img.imgUrl)
     .sort((a, b) => (languagePriority[a.language] ?? 3) - (languagePriority[b.language] ?? 3))[0]?.imgUrl ?? null
+
+  const bestImageUrl = currentBestImage ?? fallbackImage
 
   inner = (
     <>
@@ -311,7 +320,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
           <div className="flex items-center gap-1.5 mt-3 flex-wrap">
             <span className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold shrink-0">Price</span>
             <a
-              href={`https://www.mercardop.jp/product-list?keyword=${encodeURIComponent(baseId)}`}
+              href={`https://www.mercardop.jp/product-list?keyword=${encodeURIComponent(card.base_id)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] tracking-wider uppercase bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
@@ -320,7 +329,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
               Mercard
             </a>
             <a
-              href={`https://yuyu-tei.jp/sell/opc/s/search?search_word=${encodeURIComponent(baseId)}`}
+              href={`https://yuyu-tei.jp/sell/opc/s/search?search_word=${encodeURIComponent(card.base_id)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] tracking-wider uppercase bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
@@ -329,7 +338,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
               Yuyu-Tei
             </a>
             <a
-              href={`https://www.tcgplayer.com/search/one-piece-card-game/product?q=${encodeURIComponent(baseId)}&view=grid&productLineName=one-piece-card-game`}
+              href={`https://www.tcgplayer.com/search/one-piece-card-game/product?q=${encodeURIComponent(card.base_id)}&view=grid&productLineName=one-piece-card-game`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] tracking-wider uppercase bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
@@ -338,7 +347,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
               TCGPlayer
             </a>
             <a
-              href={`https://www.cardrush-op.jp/product-list?keyword=${encodeURIComponent(baseId)}`}
+              href={`https://www.cardrush-op.jp/product-list?keyword=${encodeURIComponent(card.base_id)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] tracking-wider uppercase bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
@@ -349,7 +358,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
           </div>
 
           {/* Image variants / alternate arts */}
-          {cardVariants.length > 0 && (
+          {cardVariants.length > 0 && loadExternalImages && (
             <div className="mt-4">
               <h3 className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold mb-2">
                 Alternate arts
@@ -357,51 +366,67 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
               {loadExternalImages ? (
                 /* Inline images */
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {cardVariants.flatMap((variant) =>
-                    variant.images.filter((img) => img.imgUrl).map((img) => (
-                      <div key={`${variant.card.id}-${img.language}`} className="flex flex-col items-center gap-1">
-                        <ImageLoader
-                          src={getExternalImageUrl(img.imgUrl!)}
-                          alt={`${variant.card.id} ${img.language}`}
-                          className="w-full rounded-lg shadow-md cursor-zoom-in"
-                          onClick={() => setZoomedImg(getExternalImageUrl(img.imgUrl!))}
-                        />
-                        <span className="text-[10px] text-slate-500 dark:text-[#64748b]">
-                          {variant.packs[0] || (variant.card.id === card.id ? '' : 'Alt')}
-                          {img.language === 'english-asia' ? ' EN-AS' : img.language === 'japanese' ? ' JP' : ' EN'}
-                        </span>
-                      </div>
-                    ))
-                  )}
+                  {cardVariants.flatMap((variant) => {
+                    const langMatch = preferredLanguage === 'japanese'
+                      ? (img: { language: string }) => img.language === 'japanese'
+                      : (img: { language: string }) => img.language === 'english' || img.language === 'english-asia'
+                    const matchingImages = variant.images.filter((img) => img.imgUrl && langMatch(img))
+                    if (matchingImages.length === 0) return null
+                    return matchingImages.map((img) => {
+                      const isCurrentVariant = variant.card.id === card.id
+                      const variantSuffix = variant.card.id.match(/_p\d+$/) ? ' (Parallel)'
+                        : variant.card.id.match(/_r\d+$/) ? ' (Reprint)'
+                        : ''
+                      return (
+                        <div key={`${variant.card.id}-${img.language}`} className="flex flex-col items-center gap-1">
+                          <ImageLoader
+                            src={getExternalImageUrl(img.imgUrl!)}
+                            alt={`${variant.card.id} ${img.language}`}
+                            className={`w-full rounded-lg shadow-md cursor-zoom-in ${isCurrentVariant ? 'ring-2 ring-[#3b82f6]' : ''}`}
+                            onClick={() => setZoomedImg(getExternalImageUrl(img.imgUrl!))}
+                          />
+                          <span className="text-[10px] text-slate-500 dark:text-[#64748b]">
+                            {variant.packs[0] || (variant.card.id === card.base_id ? '' : 'Alt')}{variantSuffix}
+                            {img.language === 'english-asia' ? ' EN-AS' : img.language === 'japanese' ? ' JP' : ' EN'}
+                          </span>
+                        </div>
+                      )
+                    })
+                  })}
                 </div>
               ) : (
                 /* External links */
                 <div className="space-y-2">
-                  {cardVariants.map((variant) => (
-                    <div key={variant.card.id} className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold shrink-0">
-                        {variant.packs[0] || (variant.card.id === card.id ? 'Base' : 'Alt')}
-                      </span>
-                      {variant.images.length > 0 ? (
-                        variant.images.map((img) => (
-                          <a
-                            key={img.language}
-                            href={img.imgUrl || undefined}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2.5 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
-                          >
-                            {img.language === 'english-asia' ? 'EN-AS' : img.language === 'japanese' ? 'JP' : 'EN'}
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          </a>
-                        ))
-                      ) : (
-                        <span className="text-[10px] text-slate-400 dark:text-[#64748b]">No images</span>
-                      )}
-                    </div>
-                  ))}
+                  {cardVariants.map((variant) => {
+                    const variantSuffix = variant.card.id.match(/_p\d+$/) ? ' (Parallel)'
+                      : variant.card.id.match(/_r\d+$/) ? ' (Reprint)'
+                      : ''
+                    return (
+                      <div key={variant.card.id} className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold shrink-0">
+                          {variant.packs[0] || (variant.card.id === card.base_id ? 'Base' : 'Alt')}{variantSuffix}
+                        </span>
+                        {variant.images.length > 0 ? (
+                          variant.images.map((img) => (
+                            <a
+                              key={img.language}
+                              href={img.imgUrl || undefined}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2.5 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
+                            >
+                              {img.language === 'english-asia' ? 'EN-AS' : img.language === 'japanese' ? 'JP' : 'EN'}
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </a>
+                          ))
+                        ) : (
+                          <span className="text-[10px] text-slate-400 dark:text-[#64748b]">No images</span>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>

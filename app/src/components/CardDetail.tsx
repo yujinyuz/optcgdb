@@ -37,7 +37,7 @@ export default function CardDetail() {
         if (result) {
           const [packs, variants, related] = await Promise.all([
             getCardPacks(result.id),
-            getCardVariants(result.id, preferredLanguage),
+            getCardVariants(result.base_id, preferredLanguage),
             getRelatedCards(result.id, result.types, 8),
           ])
           if (cancelled) return
@@ -57,7 +57,7 @@ export default function CardDetail() {
 
     loadCard()
     return () => { cancelled = true }
-  }, [id])
+  }, [id, preferredLanguage])
 
   if (loading) {
     return (
@@ -82,8 +82,9 @@ export default function CardDetail() {
   const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
   const costBg = costCircleBg(card)
 
-  const baseId = card.id.replace(/_[pr]\d+$/, '')
   const categoryColor = CATEGORY_COLORS[card.category]
+
+  const loadExternalImages = useAppStore((state) => state.loadExternalImages)
 
   // Pick best image URL based on language preference
   const languagePriority: Record<string, number> = preferredLanguage === 'japanese'
@@ -229,7 +230,7 @@ export default function CardDetail() {
       <div className="flex items-center gap-1.5 mt-3 flex-wrap">
         <span className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold shrink-0">Price</span>
         <a
-          href={`https://www.mercardop.jp/product-list?keyword=${encodeURIComponent(baseId)}`}
+          href={`https://www.mercardop.jp/product-list?keyword=${encodeURIComponent(card.base_id)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] tracking-wider uppercase bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
@@ -238,7 +239,7 @@ export default function CardDetail() {
           Mercard
         </a>
         <a
-          href={`https://yuyu-tei.jp/sell/opc/s/search?search_word=${encodeURIComponent(baseId)}`}
+          href={`https://yuyu-tei.jp/sell/opc/s/search?search_word=${encodeURIComponent(card.base_id)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] tracking-wider uppercase bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
@@ -247,7 +248,7 @@ export default function CardDetail() {
           Yuyu-Tei
         </a>
         <a
-          href={`https://www.tcgplayer.com/search/one-piece-card-game/product?q=${encodeURIComponent(baseId)}&view=grid&productLineName=one-piece-card-game`}
+          href={`https://www.tcgplayer.com/search/one-piece-card-game/product?q=${encodeURIComponent(card.base_id)}&view=grid&productLineName=one-piece-card-game`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] tracking-wider uppercase bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
@@ -256,7 +257,7 @@ export default function CardDetail() {
           TCGPlayer
         </a>
         <a
-          href={`https://www.cardrush-op.jp/product-list?keyword=${encodeURIComponent(baseId)}`}
+          href={`https://www.cardrush-op.jp/product-list?keyword=${encodeURIComponent(card.base_id)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] tracking-wider uppercase bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:border-[#3b82f6] transition-all"
@@ -267,19 +268,24 @@ export default function CardDetail() {
       </div>
 
       {/* Image variants / alternate arts */}
-      {cardVariants.length > 0 && (
+      {cardVariants.length > 0 && loadExternalImages && (
         <div className="mt-4">
           <h3 className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold mb-2">
             Alternate arts
           </h3>
           <div className="space-y-2">
-            {cardVariants.map((variant) => (
-              <div key={variant.card.id} className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold shrink-0">
-                  {variant.card.id === card.id ? 'Base' : variant.card.id.replace(card.id, '').replace(/^_/, '') || 'Alt'}
-                </span>
-                {variant.images.length > 0 ? (
-                  variant.images.map((img) => (
+            {cardVariants.map((variant) => {
+              const langMatch = preferredLanguage === 'japanese'
+                ? (img: { language: string }) => img.language === 'japanese'
+                : (img: { language: string }) => img.language === 'english' || img.language === 'english-asia'
+              const matchingImages = variant.images.filter(langMatch)
+              if (matchingImages.length === 0) return null
+              return (
+                <div key={variant.card.id} className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold shrink-0">
+                    {variant.card.id === card.base_id ? 'Base' : variant.card.id.replace(card.base_id, '').replace(/^_/, '') || 'Alt'}
+                  </span>
+                  {matchingImages.map((img) => (
                     <a
                       key={img.language}
                       href={img.imgUrl || undefined}
@@ -292,12 +298,10 @@ export default function CardDetail() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                     </a>
-                  ))
-                ) : (
-                  <span className="text-[10px] text-slate-400 dark:text-[#64748b]">No images</span>
-                )}
-              </div>
-            ))}
+                  ))}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

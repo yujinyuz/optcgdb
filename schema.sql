@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS packs (
 -- English data always overrides english-asia on re-seed.
 CREATE TABLE IF NOT EXISTS cards (
     id TEXT NOT NULL PRIMARY KEY,    -- e.g. "OP01-001" or "OP01-001_p1" for variants
+    base_id TEXT NOT NULL DEFAULT '', -- base ID for grouping variants (e.g. "OP01-001")
     name TEXT NOT NULL,
     rarity TEXT NOT NULL,
     category TEXT NOT NULL,          -- Leader, Character, Event, Stage, Don
@@ -33,8 +34,7 @@ CREATE TABLE IF NOT EXISTS cards (
     block_number INTEGER,            -- e.g. 1, 2, 3, 4, 5 (from Japanese source data)
     colors_json TEXT NOT NULL DEFAULT '[]',       -- JSON array of colors
     attributes_json TEXT NOT NULL DEFAULT '[]',    -- JSON array of attributes
-    types_json TEXT NOT NULL DEFAULT '[]',         -- JSON array of types
-    parallel_json TEXT NOT NULL DEFAULT '[]'      -- JSON array of parallel variant IDs
+    types_json TEXT NOT NULL DEFAULT '[]'          -- JSON array of types
 );
 
 -- Card packs: which packs (from which language source) contain each card.
@@ -112,6 +112,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS cards_fts USING fts4(
 );
 
 -- Indexes for common queries
+CREATE INDEX IF NOT EXISTS idx_cards_base_id ON cards(base_id);
 CREATE INDEX IF NOT EXISTS idx_cards_name ON cards(name);
 CREATE INDEX IF NOT EXISTS idx_cards_category ON cards(category);
 CREATE INDEX IF NOT EXISTS idx_cards_rarity ON cards(rarity);

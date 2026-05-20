@@ -125,24 +125,23 @@ class QueryBuilder {
 
 function buildCardColumns(preferredLanguage?: 'english' | 'japanese'): string {
   if (preferredLanguage === 'japanese') {
-    return `c.id, COALESCE(t.name, c.name), c.rarity, c.category, c.cost, c.power, c.counter,
+    return `c.id, c.base_id, COALESCE(t.name, c.name), c.rarity, c.category, c.cost, c.power, c.counter,
             COALESCE(t.effect, c.effect), COALESCE(t.trigger_text, c.trigger_text), c.block_number,
-            c.colors_json, c.attributes_json, COALESCE(t.types_json, c.types_json), c.parallel_json`;
+            c.colors_json, c.attributes_json, COALESCE(t.types_json, c.types_json)`;
   }
-  return `c.id, c.name, c.rarity, c.category, c.cost, c.power, c.counter,
+  return `c.id, c.base_id, c.name, c.rarity, c.category, c.cost, c.power, c.counter,
           c.effect, c.trigger_text, c.block_number,
-          c.colors_json, c.attributes_json, c.types_json, c.parallel_json`;
+          c.colors_json, c.attributes_json, c.types_json`;
 }
 
 function rowToCard(row: (string | number | null)[]): Record<string, unknown> {
   return {
-    id: row[0], name: row[1], rarity: row[2], category: row[3],
-    cost: row[4], power: row[5], counter: row[6],
-    effect: row[7], trigger_text: row[8], block_number: row[9],
-    colors: parseJsonArray(row[10] as string | null),
-    attributes: parseJsonArray(row[11] as string | null),
-    types: parseJsonArray(row[12] as string | null),
-    parallel_json: parseJsonArray(row[13] as string | null),
+    id: row[0], base_id: row[1], name: row[2], rarity: row[3], category: row[4],
+    cost: row[5], power: row[6], counter: row[7],
+    effect: row[8], trigger_text: row[9], block_number: row[10],
+    colors: parseJsonArray(row[11] as string | null),
+    attributes: parseJsonArray(row[12] as string | null),
+    types: parseJsonArray(row[13] as string | null),
   };
 }
 
@@ -194,11 +193,18 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
   if (filters.colors?.length) {
     q.where(`c.id IN (SELECT card_id FROM card_colors WHERE color IN (${placeholders(filters.colors.length)}))`, ...filters.colors);
   }
-
-  // Cards table now stores one row per base ID; no dedup needed.
+  if (filters.hideParallels) {
+    q.where('c.base_id = c.id');
+  } else {
+    // When showing alternates, only include variants with images in the preferred language
+    const langFilter = filters.preferredLanguage === 'japanese'
+      ? "ci.language = 'japanese'"
+      : "ci.language IN ('english', 'english-asia')";
+    q.where(`(c.base_id = c.id OR EXISTS (SELECT 1 FROM card_images ci WHERE ci.card_id = c.id AND ci.img_full_url IS NOT NULL AND ci.img_full_url != '' AND ${langFilter}))`);
+  }
 
   if (filters.preferredLanguage === 'japanese') {
-    q.leftJoin("card_translations t ON c.id = t.card_id AND t.language = 'japanese'");
+    q.leftJoin("card_translations t ON c.base_id = t.card_id AND t.language = 'japanese'");
   }
 
   const limit = filters.limit || 50;
@@ -254,51 +260,43 @@ function queryBlocks(db: Database): number[] {
 }
 
 function getCardById(db: Database, id: string, preferredLanguage?: 'english' | 'japanese'): unknown | null {
-  const baseId = id.replace(/_[pr]\d+$/, '');
   const translationJoin = preferredLanguage === 'japanese'
-    ? " LEFT JOIN card_translations t ON cards.id = t.card_id AND t.language = 'japanese'"
+    ? " LEFT JOIN card_translations t ON cards.base_id = t.card_id AND t.language = 'japanese'"
     : '';
   const cols = preferredLanguage === 'japanese'
-    ? `cards.id, COALESCE(t.name, cards.name), cards.rarity, cards.category, cards.cost, cards.power, cards.counter,
+    ? `cards.id, cards.base_id, COALESCE(t.name, cards.name), cards.rarity, cards.category, cards.cost, cards.power, cards.counter,
        COALESCE(t.effect, cards.effect), COALESCE(t.trigger_text, cards.trigger_text), cards.block_number,
-       cards.colors_json, cards.attributes_json, COALESCE(t.types_json, cards.types_json), cards.parallel_json`
-    : `id, name, rarity, category, cost, power, counter,
+       cards.colors_json, cards.attributes_json, COALESCE(t.types_json, cards.types_json)`
+    : `id, base_id, name, rarity, category, cost, power, counter,
        effect, trigger_text, block_number,
-       colors_json, attributes_json, types_json, parallel_json`;
+       colors_json, attributes_json, types_json`;
 
   const result = db.exec(
     `SELECT ${cols}
      FROM cards${translationJoin}
      WHERE id = ?`,
-    [baseId]
+    [id]
   );
   if (!result[0]?.values[0]) return null;
-  const card = rowToCard(result[0].values[0]);
-  if (id !== baseId) {
-    card.id = id;
-  }
-  return card;
+  return rowToCard(result[0].values[0]);
 }
 
 function getCardPacks(db: Database, cardId: string): unknown[] {
-  // Get parallel variants from the card row
-  const cardResult = db.exec(
-    `SELECT parallel_json FROM cards WHERE id = ?`,
+  // Get all variant IDs from cards table via base_id
+  const baseIdResult = db.exec(
+    `SELECT base_id FROM cards WHERE id = ?`,
     [cardId]
   );
-  const parallelIds = cardResult[0]?.values[0]?.[0] as string | null;
-  const ids = parseJsonArray(parallelIds);
-  if (ids.length === 0) ids.push(cardId);
+  const baseId = baseIdResult[0]?.values[0]?.[0] as string | null || cardId;
 
-  const placeholders = ids.map(() => '?').join(',');
   const result = db.exec(
-    `SELECT p.label, MIN(p.raw_title) as raw_title
+    `SELECT DISTINCT p.label, MIN(p.raw_title) as raw_title
      FROM card_packs cp
      JOIN packs p ON cp.pack_id = p.id AND cp.language = p.language
-     WHERE cp.card_id IN (${placeholders}) AND p.label != '' AND p.label IS NOT NULL
+     WHERE cp.card_id IN (SELECT id FROM cards WHERE base_id = ?) AND p.label != '' AND p.label IS NOT NULL
      GROUP BY p.label
      ORDER BY p.label`,
-    ids
+    [baseId]
   );
   if (!result[0]) return [];
   return result[0].values.map((row) => ({
@@ -318,66 +316,69 @@ function getCardImages(db: Database, cardId: string): unknown[] {
 }
 
 function getCardVariants(db: Database, cardId: string, preferredLanguage?: 'english' | 'japanese'): unknown[] {
-  const translationJoin = preferredLanguage === 'japanese'
-    ? " LEFT JOIN card_translations t ON cards.id = t.card_id AND t.language = 'japanese'"
-    : '';
-  const cols = preferredLanguage === 'japanese'
-    ? `cards.id, COALESCE(t.name, cards.name), cards.rarity, cards.category, cards.cost, cards.power, cards.counter,
-       COALESCE(t.effect, cards.effect), COALESCE(t.trigger_text, cards.trigger_text), cards.block_number,
-       cards.colors_json, cards.attributes_json, COALESCE(t.types_json, cards.types_json), cards.parallel_json`
-    : `id, name, rarity, category, cost, power, counter,
-       effect, trigger_text, block_number,
-       colors_json, attributes_json, types_json, parallel_json`;
-
-  const result = db.exec(
-    `SELECT ${cols}
-     FROM cards${translationJoin}
-     WHERE id = ?`,
+  // Get base_id for the given card
+  const baseIdResult = db.exec(
+    `SELECT base_id FROM cards WHERE id = ?`,
     [cardId]
   );
-  if (!result[0] || result[0].values.length === 0) return [];
+  const baseId = baseIdResult[0]?.values[0]?.[0] as string | null || cardId;
 
-  const baseCard = rowToCard(result[0].values[0]);
-  const parallelIds = (baseCard.parallel_json as string[]) || [];
+  const translationJoin = preferredLanguage === 'japanese'
+    ? " LEFT JOIN card_translations t ON c.base_id = t.card_id AND t.language = 'japanese'"
+    : '';
+  const cols = preferredLanguage === 'japanese'
+    ? `c.id, c.base_id, COALESCE(t.name, c.name), c.rarity, c.category, c.cost, c.power, c.counter,
+       COALESCE(t.effect, c.effect), COALESCE(t.trigger_text, c.trigger_text), c.block_number,
+       c.colors_json, c.attributes_json, COALESCE(t.types_json, c.types_json)`
+    : `c.id, c.base_id, c.name, c.rarity, c.category, c.cost, c.power, c.counter,
+       c.effect, c.trigger_text, c.block_number,
+       c.colors_json, c.attributes_json, c.types_json`;
 
-  // Also discover any image-only variants in card_images that aren't in parallel_json
-  const imageVariantResult = db.exec(
-    `SELECT DISTINCT card_id FROM card_images
-     WHERE card_id LIKE ? AND card_id != ? AND img_full_url IS NOT NULL AND img_full_url != ''`,
-    [`${cardId}_%`, cardId]
+  // Get all variants for this base_id
+  const variantsResult = db.exec(
+    `SELECT ${cols}
+     FROM cards c${translationJoin}
+     WHERE c.base_id = ?
+     ORDER BY c.id`,
+    [baseId]
   );
-  const imageVariantIds = imageVariantResult[0]
-    ? (imageVariantResult[0].values.map((row) => row[0]) as string[])
-    : [];
 
-  // Merge base + parallel_json + image variants, dedupe
-  const allVariantIds = Array.from(new Set([cardId, ...parallelIds, ...imageVariantIds]));
+  if (!variantsResult[0]) return [];
 
   const variants: unknown[] = [];
-  for (const variantId of allVariantIds) {
+  for (const row of variantsResult[0].values) {
+    const variantCard = rowToCard(row);
+
+    const langFilter = preferredLanguage === 'japanese'
+      ? "AND language = 'japanese'"
+      : "AND language IN ('english', 'english-asia')";
+
     const imagesResult = db.exec(
       `SELECT language, img_full_url FROM card_images
-       WHERE card_id = ? AND img_full_url IS NOT NULL AND img_full_url != ''
+       WHERE card_id = ? AND img_full_url IS NOT NULL AND img_full_url != '' ${langFilter}
        ORDER BY CASE WHEN language = 'english' THEN 0 ELSE 1 END`,
-      [variantId]
+      [variantCard.id as string]
     );
     const images = imagesResult[0]
       ? imagesResult[0].values.map((imgRow) => ({ language: imgRow[0], imgUrl: imgRow[1] }))
       : [];
+
+    // Skip variants with no images in the preferred language
+    if (images.length === 0) continue;
 
     const packsResult = db.exec(
       `SELECT DISTINCT p.raw_title, p.language FROM packs p
        JOIN card_packs cp ON p.id = cp.pack_id
        WHERE cp.card_id = ?
        ORDER BY CASE WHEN p.language = 'english' THEN 0 ELSE 1 END, p.id`,
-      [variantId]
+      [variantCard.id as string]
     );
     const packs = packsResult[0]
       ? (packsResult[0].values.map((row) => row[0]) as string[])
       : [];
 
     variants.push({
-      card: variantId === cardId ? baseCard : { ...baseCard, id: variantId },
+      card: variantCard,
       images,
       packs,
     });

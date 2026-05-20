@@ -16,6 +16,12 @@ export default function CardCard({ card }: CardCardProps) {
 
   const costBg = costCircleBg(card)
 
+  const variantSuffix = card.id !== card.base_id
+    ? (card.id.match(/_p\d+$/) ? ' (Parallel)'
+    : card.id.match(/_r\d+$/) ? ' (Reprint)'
+    : '')
+    : ''
+
   return (
     <div
       role="button"
@@ -93,7 +99,7 @@ export default function CardCard({ card }: CardCardProps) {
 
         {/* Name */}
         <h3 className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white text-center leading-snug line-clamp-2">
-          {decodeHtmlEntities(card.name)}
+          {decodeHtmlEntities(card.name)}{variantSuffix && <span className="text-[10px] font-normal text-slate-400 dark:text-[#64748b]">{variantSuffix}</span>}
         </h3>
 
         {/* Types */}
