@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAppStore } from './store'
@@ -6,6 +6,23 @@ import Layout from './components/Layout'
 import CardGrid from './components/CardGrid'
 import CardDetail from './components/CardDetail'
 import CardModal from './components/CardModal'
+
+// Console easter egg for curious developers
+console.log(
+  '%c⚓ OPTCG Lib — Offline One Piece TCG Database',
+  'color: #c8963e; font-weight: bold; font-size: 14px;',
+)
+console.log(
+  '%cBuilt for players, by players. Find any card in under 5 seconds.',
+  'color: #64748b; font-size: 11px;',
+)
+
+const loadingMessages = [
+  'Loading database...',
+  'Preparing card catalog...',
+  'Indexing sets and rarities...',
+  'Ready to sail...',
+]
 
 function OfflineIndicator() {
   const offlineReady = useAppStore((state) => state.offlineReady)
@@ -60,17 +77,29 @@ function App() {
   const error = useAppStore((state) => state.error)
   const selectedCard = useAppStore((state) => state.selectedCard)
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
+  const [loadingMsgIdx, setLoadingMsgIdx] = useState(0)
 
   useEffect(() => {
     init()
   }, [init])
+
+  // Rotate loading messages
+  useEffect(() => {
+    if (!loading) return
+    const interval = setInterval(() => {
+      setLoadingMsgIdx((i) => (i + 1) % loadingMessages.length)
+    }, 800)
+    return () => clearInterval(interval)
+  }, [loading])
 
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#0f1117] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-slate-200 dark:border-[#2e303a] border-t-[#3b82f6] rounded-full animate-spin" />
-          <div className="text-slate-500 dark:text-[#94a3b8] text-sm font-medium tracking-wide">Loading database...</div>
+          <div className="text-slate-500 dark:text-[#94a3b8] text-sm font-medium tracking-wide transition-opacity duration-300" key={loadingMsgIdx}>
+            {loadingMessages[loadingMsgIdx]}
+          </div>
         </div>
       </div>
     )

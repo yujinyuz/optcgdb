@@ -1,0 +1,48 @@
+{
+  "agent": {
+    "orchestrator": {
+      "model": "opencode/qwen3.6-plus-free",
+      "options": {},
+      "permission": {}
+    },
+    "oracle": {
+      "model": "opencode/qwen3.6-plus-free",
+      "variant": "max",
+      "options": {},
+      "permission": {}
+    },
+    "council": {
+      "model": "opencode/qwen3.6-plus-free",
+      "variant": "high",
+      "options": {},
+      "permission": {}
+    },
+    "librarian": {
+      "model": "opencode/minimax-m2.5-free",
+      "options": {},
+      "permission": {}
+    },
+    "explorer": {
+      "model": "opencode/minimax-m2.5-free",
+      "options": {},
+      "permission": {}
+    },
+    "designer": {
+      "model": "opencode/qwen3.6-plus-free",
+      "variant": "medium",
+      "options": {},
+      "permission": {}
+    },
+    "fixer": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "high",
+      "options": {},
+      "permission": {}
+    },
+    "observer": {
+      "model": "opencode/qwen3.6-plus-free",
+      "options": {},
+      "permission": {}
+    }
+  }
+}

@@ -42,7 +42,7 @@ function TogglePill({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`shrink-0 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all border active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-[#1a1d2e] ${
+      className={`shrink-0 px-3 py-1.5 rounded-md text-base sm:text-[11px] font-medium transition-all border active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-[#1a1d2e] ${
         active
           ? 'bg-[#3b82f6]/10 dark:bg-[#3b82f6]/20 text-[#3b82f6] dark:text-[#60a5fa] border-[#3b82f6]/30 dark:border-[#3b82f6]/40'
           : 'text-slate-500 dark:text-[#64748b] border-slate-200 dark:border-[#2e303a] hover:border-slate-300 dark:hover:border-[#3e4050] hover:text-slate-700 dark:hover:text-[#94a3b8]'
@@ -82,7 +82,7 @@ function RangeInput({
         placeholder={minPlaceholder}
         value={min ?? ''}
         onChange={(e) => onMinChange(e.target.value === '' ? null : Number(e.target.value))}
-        className="w-16 bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-[11px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#64748b] focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 text-center"
+        className="w-16 bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1.5 text-base sm:text-[11px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#64748b] focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 text-center"
       />
       <span className="text-slate-400 dark:text-[#64748b] text-[10px]">–</span>
       <input
@@ -92,7 +92,7 @@ function RangeInput({
         placeholder={maxPlaceholder}
         value={max ?? ''}
         onChange={(e) => onMaxChange(e.target.value === '' ? null : Number(e.target.value))}
-        className="w-16 bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1 text-[11px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#64748b] focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 text-center"
+        className="w-16 bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-md px-2 py-1.5 text-base sm:text-[11px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#64748b] focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 text-center"
       />
     </div>
   )
@@ -136,7 +136,7 @@ export default function FilterBar() {
           onClick={() => {
             resetFilters()
           }}
-          className="text-[11px] text-[#3b82f6] dark:text-[#60a5fa] hover:underline font-medium transition-colors"
+          className="text-base sm:text-[11px] text-[#3b82f6] dark:text-[#60a5fa] hover:underline font-medium transition-colors p-1"
         >
           Clear all filters
         </button>

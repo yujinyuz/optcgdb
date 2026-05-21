@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&display=swap');
+/* Barlow Semi Condensed loaded via <link> in index.html with display=swap */
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -40,13 +40,7 @@ body {
 }
 /* Shared pill styles */
 .kw-counter,
-.kw-main, .kw-when-attacking,
-.kw-don,
-.kw-on-play, .kw-on-opponent-attack,
-.kw-once-per-turn,
-.kw-activate-main, .kw-end-turn, .kw-opponent-turn, .kw-on-block, .kw-on-ko, .kw-your-turn,
-.kw-rush-char, .kw-rush, .kw-unblockable, .kw-banish, .kw-blocker,
-.kw-trigger {
+.kw-once-per-turn {
   display: inline-block;
   padding: 1px 4px;
   color: #ffffff;
@@ -54,8 +48,6 @@ body {
   font-size: 0.8em;
   line-height: 1;
   vertical-align: middle;
-}
-.kw-counter {
   border-radius: 9999px;
   background: #dc2626;
 }
@@ -64,43 +56,42 @@ body {
   margin-right: 2px;
   color: #fbbf24;
 }
-.dark .kw-counter {
+.dark .kw-counter,
+.dark .kw-once-per-turn {
   background: #ef4444;
 }
-.kw-main, .kw-when-attacking {
+/* Blue timing pills */
+.kw-main, .kw-when-attacking,
+.kw-on-play, .kw-on-opponent-attack,
+.kw-activate-main, .kw-end-turn, .kw-opponent-turn, .kw-on-block, .kw-on-ko, .kw-your-turn {
+  display: inline-block;
+  padding: 1px 4px;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.8em;
+  line-height: 1;
+  vertical-align: middle;
   border-radius: 9999px;
   background: #2563eb;
 }
-.dark .kw-main, .dark .kw-when-attacking {
+.dark .kw-main, .dark .kw-when-attacking,
+.dark .kw-on-play, .dark .kw-on-opponent-attack,
+.dark .kw-activate-main, .dark .kw-end-turn, .dark .kw-opponent-turn, .dark .kw-on-block, .dark .kw-on-ko, .dark .kw-your-turn {
   background: #3b82f6;
 }
 .kw-don {
+  display: inline-block;
+  padding: 1px 4px;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.8em;
+  line-height: 1;
+  vertical-align: middle;
   border-radius: 9999px;
   background: #1e293b;
 }
 .dark .kw-don {
   background: #334155;
-}
-.kw-on-play, .kw-on-opponent-attack {
-  border-radius: 9999px;
-  background: #2563eb;
-}
-.dark .kw-on-play, .dark .kw-on-opponent-attack {
-  background: #3b82f6;
-}
-.kw-once-per-turn {
-  border-radius: 9999px;
-  background: #dc2626;
-}
-.dark .kw-once-per-turn {
-  background: #ef4444;
-}
-.kw-activate-main, .kw-end-turn, .kw-opponent-turn, .kw-on-block, .kw-on-ko, .kw-your-turn {
-  border-radius: 9999px;
-  background: #2563eb;
-}
-.dark .kw-activate-main, .dark .kw-end-turn, .dark .kw-opponent-turn, .dark .kw-on-block, .dark .kw-on-ko, .dark .kw-your-turn {
-  background: #3b82f6;
 }
 .kw-rush-char, .kw-rush, .kw-unblockable, .kw-banish, .kw-blocker {
   padding: 0 8px;
@@ -167,10 +158,15 @@ body {
   to { opacity: 0; transform: scale(0.95) translateY(-4px); }
 }
 
-/* Easing tokens */
+/* Easing tokens — spring-derived curves */
 :root {
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Spring presets — mass-spring-damper approximations */
+  --ease-spring-tight: cubic-bezier(0.20, 0.80, 0.30, 1.10);
+  --ease-spring-default: cubic-bezier(0.25, 0.90, 0.30, 1.05);
+  --ease-spring-soft: cubic-bezier(0.20, 0.70, 0.25, 1.00);
+  --ease-spring-snappy: cubic-bezier(0.15, 0.85, 0.35, 1.15);
 }
 
 *:focus-visible {
@@ -216,6 +212,73 @@ input[type="text"]:focus-visible {
 @keyframes tooltipOut {
   from { opacity: 1; transform: translateY(0); }
   to { opacity: 0; transform: translateY(4px); }
+}
+
+/* View Transitions — card tile → modal morph */
+@keyframes cardMorph-expand {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+::view-transition-old(optcg-card-morph),
+::view-transition-new(optcg-card-morph) {
+  animation: cardMorph-expand 300ms var(--ease-spring-default) both;
+}
+
+/* Spring-based panel transitions */
+@keyframes filterPanelIn {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes filterPanelOut {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@keyframes filterPanelInDesktop {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes filterPanelOutDesktop {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+/* Spring-based modal with slight overshoot */
+@keyframes modalContentInSpring {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes modalContentOutSpring {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.92) translateY(12px); }
+}
+
+/* Spring-based menu */
+@keyframes menuInSpring {
+  from { opacity: 0; transform: scale(0.92) translateY(-6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes menuOutSpring {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.92) translateY(-6px); }
+}
+
+/* Spring stagger for card grid */
+@keyframes cardInSpring {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Swipe-dismiss drag indicator */
+@keyframes swipeHint {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {

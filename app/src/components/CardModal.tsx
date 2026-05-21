@@ -5,6 +5,8 @@ import type { Card } from '../types'
 import ImageLoader from './ImageLoader'
 import { COLOR_HEX, RARITY_SHORT, CATEGORY_COLORS } from '../types'
 import { decodeHtmlEntities, renderCardText, getAttributeIcon, getAttributeColor, getTextColorForBg, costCircleBg, getExternalImageUrl, groupImagesByLanguage } from '../utils'
+import { useSwipe, snapBack } from '../lib/gesture'
+import { prefersReducedMotion } from '../lib/spring'
 
 interface CardModalProps {
   cardId: string
@@ -19,11 +21,13 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
   const [closing, setClosing] = useState(false)
   const [zoomedImg, setZoomedImg] = useState<string | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
 
   const cards = useAppStore((state) => state.cards)
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
   const preferredLanguage = useAppStore((state) => state.preferredLanguage)
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
+  const reducedMotion = prefersReducedMotion()
 
   const currentIndex = cards.findIndex((c) => c.id === cardId)
   const hasPrev = currentIndex > 0
@@ -36,6 +40,30 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
   const goNext = useCallback(() => {
     if (hasNext) setSelectedCard(cards[currentIndex + 1])
   }, [hasNext, currentIndex, cards, setSelectedCard])
+
+  // Swipe gesture for prev/next navigation
+  const swipeOffsetRef = useRef(0)
+  const { handlers: swipeHandlers } = useSwipe({
+    threshold: 80,
+    maxDistance: 200,
+    direction: 'x',
+    onSwipe: (_velocity, _distance, direction) => {
+      if (direction === 'left' && hasNext) goNext()
+      else if (direction === 'right' && hasPrev) goPrev()
+      else if (modalRef.current) snapBack(modalRef.current, 'x', 250)
+      swipeOffsetRef.current = 0
+    },
+    onDrag: (offsetX) => {
+      swipeOffsetRef.current = offsetX
+    },
+    onRelease: () => {
+      if (modalRef.current && Math.abs(swipeOffsetRef.current) > 0) {
+        snapBack(modalRef.current, 'x', 250)
+      }
+      swipeOffsetRef.current = 0
+    },
+    resistance: 0.5,
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -68,12 +96,13 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
 
   useEffect(() => {
     if (contentRef.current) contentRef.current.scrollTop = 0
+    swipeOffsetRef.current = 0
   }, [cardId])
 
   const handleClose = useCallback(() => {
     setClosing(true)
-    setTimeout(onClose, 150)
-  }, [onClose])
+    setTimeout(onClose, reducedMotion ? 100 : 200)
+  }, [onClose, reducedMotion])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -100,8 +129,8 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
   }, [handleKeyDown])
 
   const overlayStyle = closing
-    ? { animation: 'modalOverlayOut 150ms var(--ease-out-quart) forwards' }
-    : { animation: 'modalOverlayIn 150ms var(--ease-out-quart) forwards' }
+    ? { animation: `modalOverlayOut ${reducedMotion ? 100 : 150}ms var(--ease-out-quart) forwards` }
+    : { animation: `modalOverlayIn ${reducedMotion ? 100 : 150}ms var(--ease-out-quart) forwards` }
 
   let inner: React.ReactNode
   if (loading) {
@@ -139,11 +168,20 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
 
   inner = (
     <>
+      {/* Swipe hint edges — subtle glow on mobile to indicate swipe navigation */}
+      {hasPrev && (
+        <div className="sm:hidden absolute left-0 top-1/4 bottom-1/4 w-1 bg-gradient-to-r from-slate-400/20 to-transparent rounded-r-full animate-[swipeHint_2s_ease-in-out_1s_3]" />
+      )}
+      {hasNext && (
+        <div className="sm:hidden absolute right-0 top-1/4 bottom-1/4 w-1 bg-gradient-to-l from-slate-400/20 to-transparent rounded-l-full animate-[swipeHint_2s_ease-in-out_1.5s_3]" />
+      )}
+
       {/* Prev arrow */}
       {hasPrev && (
         <button
           onClick={(e) => { e.stopPropagation(); goPrev() }}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 dark:bg-black/60 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white shadow-lg hover:scale-105 transition-all"
+          className="absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-white/90 dark:bg-black/60 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white shadow-lg hover:scale-105 transition-all touch-manipulation"
+          style={{ transition: 'transform 200ms var(--ease-spring-snappy), box-shadow 150ms var(--ease-out-quart)' }}
           aria-label="Previous card"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -156,7 +194,8 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
       {hasNext && (
         <button
           onClick={(e) => { e.stopPropagation(); goNext() }}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 dark:bg-black/60 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white shadow-lg hover:scale-105 transition-all"
+          className="absolute right-1 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-white/90 dark:bg-black/60 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white shadow-lg hover:scale-105 transition-all touch-manipulation"
+          style={{ transition: 'transform 200ms var(--ease-spring-snappy), box-shadow 150ms var(--ease-out-quart)' }}
           aria-label="Next card"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -166,10 +205,19 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
       )}
 
       <div
-        ref={contentRef}
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#1a1d2e] shadow-2xl animate-[modalContentIn_200ms_var(--ease-out-expo)]"
+        ref={(el) => {
+          contentRef.current = el
+          modalRef.current = el
+        }}
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#1a1d2e] shadow-2xl"
+        style={{
+          animation: closing
+            ? `modalContentOutSpring ${reducedMotion ? 100 : 200}ms var(--ease-out-quart) forwards`
+            : `modalContentInSpring ${reducedMotion ? 100 : 250}ms var(--ease-spring-default) forwards`,
+          viewTransitionName: 'optcg-card-morph',
+        }}
         onClick={(e) => e.stopPropagation()}
-        style={closing ? { animation: 'modalContentOut 150ms var(--ease-out-quart) forwards' } : undefined}
+        {...swipeHandlers}
       >
         {/* Close button */}
         <button

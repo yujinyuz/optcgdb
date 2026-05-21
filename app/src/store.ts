@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { initDB, queryCards, queryPacks, querySets, queryBlocks } from './db';
 import type { QueryCardsFilters } from './db';
 import type { Card, Pack, CardFilters, SearchScope } from './types';
-import { DEFAULT_FILTERS } from './types';
+import { DEFAULT_FILTERS, SEARCH_LANGUAGES, SEARCH_LANGUAGE_DISPLAY } from './types';
 
 type Theme = 'light' | 'dark';
 type PreferredLanguage = 'english' | 'japanese';
@@ -147,6 +147,7 @@ interface AppState {
   resetFilters: () => void;
   loadMore: () => Promise<void>;
   setSelectedCard: (card: Card | null) => void;
+  setSelectedCardWithTransition: (card: Card) => void;
   toggleTheme: () => void;
   setPreferredLanguage: (lang: PreferredLanguage) => void;
   setLoadExternalImages: (enabled: boolean) => void;
@@ -249,6 +250,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setSelectedCard: (card) => set({ selectedCard: card }),
 
+  setSelectedCardWithTransition: (card) => {
+    // View Transition name is set by the caller (CardGrid) on the tile element.
+    // The modal reads it via the same CSS name. Just set the card.
+    set({ selectedCard: card })
+  },
+
   toggleTheme: () => {
     set((state) => {
       const newTheme = state.theme === 'dark' ? 'light' : 'dark';
@@ -311,3 +318,30 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 }));
+
+/* ── Language section grouping (search only) ────────────────── */
+
+export interface LanguageSection {
+  lang: string;
+  title: string;
+  cards: Card[];
+}
+
+export function getLanguageSections(): LanguageSection[] {
+  const { cards, filters } = useAppStore.getState();
+  if (!filters.search) return [];
+
+  return SEARCH_LANGUAGES
+    .map((lang) => ({
+      lang,
+      title: SEARCH_LANGUAGES.includes(lang as typeof SEARCH_LANGUAGES[number])
+        ? (SEARCH_LANGUAGE_DISPLAY as Record<string, string>)[lang] || lang
+        : lang,
+      cards: cards.filter((c) => {
+        if (!c.has_images?.[lang]) return false;
+        if (lang === 'english') return true;
+        return !!c.name_translated;
+      }),
+    }))
+    .filter((s) => s.cards.length > 0);
+}

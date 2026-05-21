@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useAppStore } from '../store'
 import FilterBar from './FilterBar'
+import { useSwipe } from '../lib/gesture'
+import { prefersReducedMotion } from '../lib/spring'
 
 function SettingsMenu() {
   const [open, setOpen] = useState(false)
@@ -17,6 +19,7 @@ function SettingsMenu() {
   const toggleTheme = useAppStore((state) => state.toggleTheme)
   const preferredLanguage = useAppStore((state) => state.preferredLanguage)
   const setPreferredLanguage = useAppStore((state) => state.setPreferredLanguage)
+  const reducedMotion = prefersReducedMotion()
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
@@ -45,7 +48,7 @@ function SettingsMenu() {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setInstallTooltip(false)
         setClosing(true)
-        setTimeout(() => { setOpen(false); setClosing(false) }, 120)
+        setTimeout(() => { setOpen(false); setClosing(false) }, reducedMotion ? 100 : 150)
       }
     }
     document.addEventListener('mousedown', handleClick)
@@ -54,18 +57,18 @@ function SettingsMenu() {
       document.removeEventListener('mousedown', handleClick)
       document.removeEventListener('touchstart', handleClick)
     }
-  }, [open])
+  }, [open, reducedMotion])
 
   return (
     <div className="relative" ref={menuRef}>
       <button
         type="button"
         onClick={() => {
-          if (open) { setClosing(true); setTimeout(() => { setOpen(false); setClosing(false) }, 120) }
+          if (open) { setClosing(true); setTimeout(() => { setOpen(false); setClosing(false) }, reducedMotion ? 100 : 150) }
           else { setOpen(true); setClosing(false) }
         }}
         className={`p-2 text-slate-500 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] rounded-lg transition-all ${open ? 'rotate-45' : 'rotate-0'}`}
-        style={{ transition: 'color 150ms, background-color 150ms, transform 200ms var(--ease-out-expo)' }}
+        style={{ transition: `color 150ms, background-color 150ms, transform ${reducedMotion ? 150 : 200}ms var(--ease-spring-tight)` }}
         aria-label="Settings"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -75,10 +78,10 @@ function SettingsMenu() {
       </button>
       {open && (
         <div
-          className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-xl shadow-lg py-2 z-50 origin-top-right"
+          className="absolute right-0 top-full mt-1 w-52 sm:w-56 bg-white dark:bg-[#1a1d2e] border border-slate-200 dark:border-[#2e303a] rounded-xl shadow-lg py-2 z-50 origin-top-right max-h-[calc(100vh-4rem)] overflow-y-auto"
           style={closing
-            ? { animation: 'menuOut 120ms var(--ease-out-quart) forwards' }
-            : { animation: 'menuIn 150ms var(--ease-out-expo) forwards' }
+            ? { animation: `menuOutSpring ${reducedMotion ? 100 : 150}ms var(--ease-out-quart) forwards` }
+            : { animation: `menuInSpring ${reducedMotion ? 100 : 180}ms var(--ease-spring-tight) forwards` }
           }
         >
           <div className="flex items-center justify-between px-3 py-2">
@@ -280,9 +283,11 @@ function TopSearchBar() {
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarClosing, setSidebarClosing] = useState(false)
+  const [swipeOffset, setSwipeOffset] = useState(0)
+  const reducedMotion = prefersReducedMotion()
 
   useEffect(() => {
-    const handleClose = () => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, 200) }
+    const handleClose = () => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, reducedMotion ? 100 : 200) }
     const handleOpen = () => { setSidebarOpen(true); setSidebarClosing(false) }
     window.addEventListener('optcg-close-sidebar', handleClose)
     window.addEventListener('optcg-open-sidebar', handleOpen)
@@ -290,40 +295,78 @@ export default function Layout() {
       window.removeEventListener('optcg-close-sidebar', handleClose)
       window.removeEventListener('optcg-open-sidebar', handleOpen)
     }
-  }, [])
+  }, [reducedMotion])
+
+  // Swipe-to-dismiss for mobile filter panel
+  const { handlers: swipeHandlers } = useSwipe({
+    threshold: 100,
+    maxDistance: 200,
+    direction: 'y',
+    onSwipe: (_velocity, _distance, direction) => {
+      if (direction === 'down') {
+        setSidebarClosing(true)
+        setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false); setSwipeOffset(0) }, reducedMotion ? 100 : 200)
+      } else {
+        setSwipeOffset(0)
+      }
+    },
+    onDrag: (_offsetX, offsetY) => {
+      // Only track downward drag on mobile
+      if (offsetY > 0) setSwipeOffset(offsetY)
+    },
+    onRelease: () => {
+      if (swipeOffset > 0 && swipeOffset < 100) {
+        setSwipeOffset(0)
+      }
+    },
+    resistance: 0.4,
+  })
+
+  const duration = reducedMotion ? 100 : 200
 
   return (
     <div className="flex-1 flex h-screen overflow-hidden">
       {/* Overlay backdrop */}
       {sidebarOpen && (
         <div
-          className={`fixed inset-0 z-30 bg-black/40 ${sidebarClosing ? 'animate-[sidebarOverlayOut_200ms_var(--ease-out-quart)_forwards]' : ''}`}
-          onClick={() => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, 200) }}
-          style={!sidebarClosing ? { animation: 'sidebarOverlayIn 150ms var(--ease-out-quart) forwards' } : undefined}
+          className={`fixed inset-0 z-30 bg-black/40 ${sidebarClosing ? `animate-[sidebarOverlayOut_${duration}ms_var(--ease-out-quart)_forwards]` : ''}`}
+          onClick={() => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, duration) }}
+          style={!sidebarClosing ? { animation: `sidebarOverlayIn ${duration}ms var(--ease-out-quart) forwards` } : undefined}
         />
       )}
 
       {/* Filter panel: bottom sheet on mobile, right drawer on desktop */}
       <aside
-        className={`fixed z-30 bg-white dark:bg-[#1a1d2e] border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-[#2e303a] overflow-y-auto transition-transform duration-200 shadow-xl inset-x-0 bottom-0 top-1/3 sm:inset-x-auto sm:top-0 sm:right-0 sm:bottom-0 sm:w-80 sm:h-screen rounded-t-2xl sm:rounded-none ${
+        className={`fixed z-30 bg-white dark:bg-[#1a1d2e] border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-[#2e303a] overflow-y-auto shadow-xl inset-x-0 bottom-0 sm:inset-y-0 sm:inset-x-auto sm:top-0 sm:right-0 sm:bottom-0 sm:w-80 sm:h-screen rounded-t-2xl sm:rounded-none max-h-[85vh] sm:max-h-none ${
           sidebarClosing
             ? 'translate-y-full sm:translate-x-full sm:translate-y-0'
             : sidebarOpen
               ? 'translate-y-0 sm:translate-x-0 sm:translate-y-0'
               : 'translate-y-full sm:translate-x-full sm:translate-y-0'
         }`}
+        style={{
+          transition: sidebarOpen && !sidebarClosing ? `transform ${duration}ms var(--ease-spring-default)` : `transform ${duration}ms var(--ease-out-quart)`,
+          transform: swipeOffset > 0 && !sidebarClosing ? `translateY(${swipeOffset}px)` : undefined,
+        }}
+        {...swipeHandlers}
       >
         <div className="p-4">
-          {/* Mobile drag handle */}
-          <div className="flex justify-center mb-3 sm:hidden">
+          {/* Mobile drag handle with progress indicator */}
+          <div className="flex justify-center mb-3 sm:hidden relative">
             <div className="w-8 h-1 rounded-full bg-slate-300 dark:bg-[#3a3d4a]" />
+            {swipeOffset > 0 && (
+              <div
+                className="absolute top-0 left-1/2 -translate-x-1/2 h-1 rounded-full bg-[#3b82f6]/50 transition-all duration-75"
+                style={{ width: `${Math.min(swipeOffset / 2, 32)}px` }}
+              />
+            )}
           </div>
 
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">Filters</span>
             <button
-              onClick={() => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, 200) }}
+              onClick={() => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, duration) }}
               className="p-2 text-slate-500 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#25283a] rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -341,18 +384,20 @@ export default function Layout() {
         {/* Navbar */}
         <div className="shrink-0 bg-slate-50 dark:bg-[#0f1117] border-b border-slate-200/60 dark:border-[#2e303a]/60 px-3 sm:px-6 py-2.5 sm:py-3">
           <div className="flex items-center justify-between gap-1.5 sm:gap-2 flex-nowrap">
-            <div className="shrink-0">
-              <img
-                src="/logo-op.png"
-                alt="ONE PIECE CARD GAME"
-                className="h-4 sm:h-5 w-auto dark:hidden"
-              />
-              <img
-                src="/logo-op-white.png"
-                alt="ONE PIECE CARD GAME"
-                className="h-4 sm:h-5 w-auto hidden dark:block"
-              />
-              <div className="text-[4px] sm:text-[5px] font-bold tracking-wider text-slate-400 dark:text-[#64748b] uppercase leading-none mt-0.5 text-center">
+            <div className="shrink-0 group cursor-pointer">
+              <div className="transition-transform duration-200 group-hover:scale-[1.02]">
+                <img
+                  src="/logo-op.png"
+                  alt="ONE PIECE CARD GAME"
+                  className="h-4 sm:h-5 w-auto dark:hidden"
+                />
+                <img
+                  src="/logo-op-white.png"
+                  alt="ONE PIECE CARD GAME"
+                  className="h-4 sm:h-5 w-auto hidden dark:block"
+                />
+              </div>
+              <div className="text-[4px] sm:text-[5px] font-bold tracking-wider text-slate-400 dark:text-[#64748b] uppercase leading-none mt-0.5 text-center transition-colors duration-200 group-hover:text-[#c8963e]">
                 Offline Library
               </div>
             </div>
@@ -362,6 +407,7 @@ export default function Layout() {
                 type="button"
                 onClick={() => setSidebarOpen(true)}
                 className="p-2 text-slate-500 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d2e] rounded-lg active:scale-95 transition-all"
+                style={{ transition: 'transform 150ms var(--ease-spring-tight), background-color 150ms, color 150ms' }}
                 aria-label="Open filters"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

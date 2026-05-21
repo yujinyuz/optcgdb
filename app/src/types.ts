@@ -23,6 +23,11 @@ export interface Card {
   types: string[];
   block_number: number | null;
   img_url: string | null;
+  img_url_en: string | null;
+  img_url_jp: string | null;
+  has_images: Record<string, boolean>;
+  name_translated: string | null;
+  effect_translated: string | null;
 }
 
 export type CardCategory = 'Leader' | 'Character' | 'Event' | 'Stage' | 'Don';
@@ -107,3 +112,11 @@ export const LANGUAGE_DISPLAY = {
   english: 'EN',
   japanese: 'JP',
 } as const;
+
+export const SEARCH_LANGUAGES = ['english', 'japanese'] as const;
+export type SearchLanguage = (typeof SEARCH_LANGUAGES)[number];
+
+export const SEARCH_LANGUAGE_DISPLAY: Record<string, string> = {
+  english: 'English',
+  japanese: '日本語',
+};

@@ -197,7 +197,7 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
     q.where('c.base_id = c.id');
   }
 
-  if (filters.preferredLanguage) {
+  if (filters.preferredLanguage && !filters.search) {
     const languageGroups: Record<string, string[]> = {
       english: ['english', 'english-asia'],
       japanese: ['japanese'],
@@ -205,6 +205,15 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
     const langs = languageGroups[filters.preferredLanguage] || ['english', 'english-asia'];
     const ph = langs.map(() => '?').join(',');
     q.where(`(c.base_id = c.id OR EXISTS (SELECT 1 FROM card_images ci WHERE ci.card_id = c.id AND ci.img_full_url IS NOT NULL AND ci.img_full_url != '' AND ci.language IN (${ph})))`, ...langs);
+  }
+
+  // When searching, add translation joins and has_images flags for all search languages
+  if (filters.search) {
+    for (const lang of ['japanese'] as const) {
+      if (lang === 'japanese') {
+        q.leftJoin("card_translations t_jp ON c.base_id = t_jp.card_id AND t_jp.language = 'japanese'");
+      }
+    }
   }
 
   if (filters.preferredLanguage === 'japanese') {
@@ -220,6 +229,31 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
 
   // Use pre-computed best image URLs from card_best_images table
   q.leftJoin('card_best_images cbi ON c.id = cbi.card_id');
+
+  // When searching, return both EN and JP image URLs separately so client can pick per section
+  if (filters.search) {
+    const searchExtra = `, cbi.img_url_en as img_url_en, cbi.img_url_jp as img_url_jp, json_object('english', EXISTS(SELECT 1 FROM card_images ci WHERE ci.card_id = c.id AND ci.language IN ('english', 'english-asia') AND ci.img_full_url IS NOT NULL AND ci.img_full_url != ''), 'japanese', EXISTS(SELECT 1 FROM card_images ci WHERE ci.card_id = c.id AND ci.language = 'japanese' AND ci.img_full_url IS NOT NULL AND ci.img_full_url != '')) as has_images, t_jp.name as name_translated, t_jp.effect as effect_translated`;
+    const dataQ = q.select(buildCardColumns(filters.preferredLanguage) + searchExtra, 'cards c', limit, offset);
+    const dataRes = db.exec(dataQ.sql, dataQ.params);
+
+    const cards: unknown[] = [];
+    if (dataRes[0]) {
+      for (const row of dataRes[0].values) {
+        const card = rowToCard(row);
+        (card as Record<string, unknown>).img_url_en = row[14] || null;
+        (card as Record<string, unknown>).img_url_jp = row[15] || null;
+        (card as Record<string, unknown>).has_images = row[16] ? JSON.parse(row[16] as string) : {};
+        (card as Record<string, unknown>).name_translated = row[17] || null;
+        (card as Record<string, unknown>).effect_translated = row[18] || null;
+        // Default img_url to EN for backwards compat
+        (card as Record<string, unknown>).img_url = row[14] || row[15] || null;
+        cards.push(card);
+      }
+    }
+
+    return { cards, total };
+  }
+
   const imgCol = filters.preferredLanguage === 'japanese'
     ? "COALESCE(NULLIF(cbi.img_url_jp, ''), cbi.img_url_en)"
     : "COALESCE(NULLIF(cbi.img_url_en, ''), cbi.img_url_jp)";
@@ -232,6 +266,11 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
     for (const row of dataRes[0].values) {
       const card = rowToCard(row);
       (card as Record<string, unknown>).img_url = row[14] || null;
+      (card as Record<string, unknown>).img_url_en = null;
+      (card as Record<string, unknown>).img_url_jp = null;
+      (card as Record<string, unknown>).has_images = {};
+      (card as Record<string, unknown>).name_translated = null;
+      (card as Record<string, unknown>).effect_translated = null;
       cards.push(card);
     }
   }

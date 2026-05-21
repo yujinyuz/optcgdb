@@ -6,15 +6,19 @@ import ImageLoader from './ImageLoader'
 
 interface CardCardProps {
   card: Card
+  displayName?: string
+  disableClick?: boolean
 }
 
-export default function CardCard({ card }: CardCardProps) {
+export default function CardCard({ card, displayName, disableClick }: CardCardProps) {
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
   const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
   const categoryColor = CATEGORY_COLORS[card.category]
 
   const costBg = costCircleBg(card)
+
+  const displayCardName = displayName || card.name
 
   const variantSuffix = card.id !== card.base_id
     ? (card.id.match(/_p\d+$/) ? ' (Parallel)'
@@ -27,8 +31,8 @@ export default function CardCard({ card }: CardCardProps) {
       role="button"
       aria-label={card.name}
       tabIndex={0}
-      onClick={() => setSelectedCard(card)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedCard(card) }}
+      onClick={() => { if (!disableClick) setSelectedCard(card) }}
+      onKeyDown={(e) => { if (!disableClick && (e.key === 'Enter' || e.key === ' ')) setSelectedCard(card) }}
       className="group flex flex-col rounded-xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-md shadow-black/5 dark:shadow-white/5 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-white/10 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-150 cursor-pointer"
       style={{ transition: 'box-shadow 150ms var(--ease-out-quart), transform 150ms var(--ease-out-quart)' }}
     >
@@ -105,7 +109,7 @@ export default function CardCard({ card }: CardCardProps) {
 
         {/* Name */}
         <h3 className="mt-0.5 text-sm text-slate-900 dark:text-white text-center leading-snug line-clamp-2 card-name">
-          {decodeHtmlEntities(card.name)}{variantSuffix && <span className="text-[10px] font-normal text-slate-400 dark:text-[#64748b]">{variantSuffix}</span>}
+          {decodeHtmlEntities(displayCardName)}{variantSuffix && <span className="text-[10px] font-normal text-slate-400 dark:text-[#64748b]">{variantSuffix}</span>}
         </h3>
 
         {/* Types */}
