@@ -383,6 +383,7 @@ export default function Layout() {
   const [sidebarClosing, setSidebarClosing] = useState(false)
   const [searchFocused, setSearchFocused] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
+  const dragOffsetRef = useRef(0)
   const reducedMotion = prefersReducedMotion()
   const dragStartRef = useRef<number | null>(null)
 
@@ -416,16 +417,21 @@ export default function Layout() {
   const handleDragMove = (clientY: number) => {
     if (dragStartRef.current === null || !sidebarOpen || sidebarClosing) return
     const delta = clientY - dragStartRef.current
-    if (delta > 0) setDragOffset(Math.min(delta, 150))
+    if (delta > 0) {
+      const offset = Math.min(delta, 150)
+      dragOffsetRef.current = offset
+      setDragOffset(offset)
+    }
   }
 
   const handleDragEnd = () => {
     if (dragStartRef.current === null) return
-    if (dragOffset >= dismissThreshold) {
+    if (dragOffsetRef.current >= dismissThreshold) {
       setSidebarClosing(true)
-      setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false); setDragOffset(0) }, duration)
+      setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false); setDragOffset(0); dragOffsetRef.current = 0 }, duration)
     } else {
       setDragOffset(0)
+      dragOffsetRef.current = 0
     }
     dragStartRef.current = null
   }
@@ -462,29 +468,16 @@ export default function Layout() {
           <div
             className="flex justify-center mb-4 sm:hidden cursor-grab active:cursor-grabbing"
             style={{ touchAction: 'none' }}
-            onTouchStart={(e) => {
-              e.preventDefault()
-              handleDragStart(e.touches[0].clientY)
-            }}
-            onTouchMove={(e) => {
-              e.preventDefault()
-              handleDragMove(e.touches[0].clientY)
-            }}
-            onTouchEnd={handleDragEnd}
             onPointerDown={(e) => {
-              if (e.pointerType === 'mouse') {
-                ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-                handleDragStart(e.clientY)
-              }
+              ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+              handleDragStart(e.clientY)
             }}
-            onPointerMove={(e) => {
-              if (e.pointerType === 'mouse') handleDragMove(e.clientY)
-            }}
+            onPointerMove={(e) => handleDragMove(e.clientY)}
             onPointerUp={handleDragEnd}
             onLostPointerCapture={handleDragEnd}
           >
             <div
-              className="w-10 h-1.5 rounded-full transition-colors duration-150"
+              className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-[#3a3d4a] transition-colors duration-150"
               style={{
                 backgroundColor: dragOffset > 20
                   ? `rgba(59, 130, 246, ${Math.min(dragOffset / dismissThreshold, 1)})`
