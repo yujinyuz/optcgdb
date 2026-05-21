@@ -145,13 +145,31 @@ def seed_cards(conn: sqlite3.Connection, language: str, packs: dict, block_map: 
         card_id = card["id"]
         base_id = card_id.split("_")[0] if "_" in card_id else card_id
 
+        canonical = base_cards[base_id]
+
         if not is_primary:
             if language in ("english-asia", "japanese") and existing_ids and card_id in existing_ids:
+                # Card already exists from primary source — but check if
+                # english-asia has <br> in effect/trigger that english lacks.
+                if language == "english-asia":
+                    ea_effect = canonical.get("effect") or ""
+                    ea_trigger = canonical.get("trigger") or ""
+                    if "<br>" in ea_effect or "<br>" in ea_trigger:
+                        existing = conn.execute(
+                            "SELECT effect, trigger_text FROM cards WHERE id = ?", (card_id,)
+                        ).fetchone()
+                        if existing:
+                            new_effect = decode_html(ea_effect) if "<br>" in ea_effect else existing[0]
+                            new_trigger = decode_html(ea_trigger) if "<br>" in ea_trigger else existing[1]
+                            if new_effect != existing[0] or new_trigger != existing[1]:
+                                conn.execute(
+                                    "UPDATE cards SET effect = ?, trigger_text = ? WHERE id = ?",
+                                    (new_effect, new_trigger, card_id),
+                                )
                 continue
             if language not in ("english-asia", "japanese"):
                 continue
 
-        canonical = base_cards[base_id]
         block_number = block_map.get(card_id, block_map.get(base_id, canonical.get("block_number")))
 
         cursor = conn.execute(

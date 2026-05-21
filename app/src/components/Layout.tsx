@@ -40,13 +40,10 @@ function SettingsMenu() {
   }, [isIOS, deferredPrompt])
 
   useEffect(() => {
-    if (!open) setInstallTooltip(false)
-  }, [open])
-
-  useEffect(() => {
     if (!open) return
     const handleClick = (e: MouseEvent | TouchEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setInstallTooltip(false)
         setClosing(true)
         setTimeout(() => { setOpen(false); setClosing(false) }, 120)
       }
@@ -342,24 +339,24 @@ export default function Layout() {
       {/* Main area: fixed navbar + scrollable content */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Navbar */}
-        <div className="shrink-0 bg-slate-50 dark:bg-[#0f1117] border-b border-slate-200/60 dark:border-[#2e303a]/60 px-4 sm:px-6 py-3">
-          <div className="flex items-center justify-between gap-2">
+        <div className="shrink-0 bg-slate-50 dark:bg-[#0f1117] border-b border-slate-200/60 dark:border-[#2e303a]/60 px-3 sm:px-6 py-2.5 sm:py-3">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 flex-nowrap">
             <div className="shrink-0">
               <img
                 src="/logo-op.png"
                 alt="ONE PIECE CARD GAME"
-                className="h-5 w-auto dark:hidden"
+                className="h-4 sm:h-5 w-auto dark:hidden"
               />
               <img
                 src="/logo-op-white.png"
                 alt="ONE PIECE CARD GAME"
-                className="h-5 w-auto hidden dark:block"
+                className="h-4 sm:h-5 w-auto hidden dark:block"
               />
-              <div className="text-[5px] font-bold tracking-wider text-slate-400 dark:text-[#64748b] uppercase leading-none mt-0.5 text-center">
+              <div className="text-[4px] sm:text-[5px] font-bold tracking-wider text-slate-400 dark:text-[#64748b] uppercase leading-none mt-0.5 text-center">
                 Offline Library
               </div>
             </div>
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 min-w-0">
               <TopSearchBar />
               <button
                 type="button"

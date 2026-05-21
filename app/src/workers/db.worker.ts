@@ -175,7 +175,7 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
     q.where(`c.rarity IN (${placeholders(filters.rarities.length)})`, ...filters.rarities);
   }
   if (filters.attributes?.length) {
-    q.where(`c.id IN (SELECT card_id FROM card_attributes WHERE attribute IN (${placeholders(filters.attributes.length)}))`, ...filters.attributes);
+    q.where(`c.base_id IN (SELECT card_id FROM card_attributes WHERE attribute IN (${placeholders(filters.attributes.length)}))`, ...filters.attributes);
   }
   if (filters.costMin != null) q.where('c.cost >= ?', filters.costMin);
   if (filters.costMax != null) q.where('c.cost <= ?', filters.costMax);
@@ -191,7 +191,7 @@ function queryCards(db: Database, filters: QueryCardsFilters): { cards: unknown[
     q.where(`c.block_number IN (${placeholders(filters.blocks.length)})`, ...filters.blocks);
   }
   if (filters.colors?.length) {
-    q.where(`c.id IN (SELECT card_id FROM card_colors WHERE color IN (${placeholders(filters.colors.length)}))`, ...filters.colors);
+    q.where(`c.base_id IN (SELECT card_id FROM card_colors WHERE color IN (${placeholders(filters.colors.length)}))`, ...filters.colors);
   }
   if (filters.hideVariants) {
     q.where('c.base_id = c.id');

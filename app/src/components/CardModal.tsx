@@ -70,6 +70,11 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
     if (contentRef.current) contentRef.current.scrollTop = 0
   }, [cardId])
 
+  const handleClose = useCallback(() => {
+    setClosing(true)
+    setTimeout(onClose, 150)
+  }, [onClose])
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       if (zoomedImg) {
@@ -80,12 +85,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
     }
     if (e.key === 'ArrowLeft') goPrev()
     if (e.key === 'ArrowRight') goNext()
-  }, [onClose, goPrev, goNext, zoomedImg])
-
-  function handleClose() {
-    setClosing(true)
-    setTimeout(onClose, 150)
-  }
+  }, [handleClose, goPrev, goNext, zoomedImg])
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown)
@@ -260,8 +260,8 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
 
             {/* Card Effect */}
             {card.effect && (
-              <div className="px-4 pb-3">
-                <div className="mt-3 rounded-xl bg-white dark:bg-[#0f1117] p-4">
+              <div className="px-3 sm:px-4 pb-3">
+                <div className="mt-3 rounded-xl bg-white dark:bg-[#0f1117] p-3 sm:p-4">
                   <div
                     className="text-sm text-slate-900 dark:text-white leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: renderCardText(card.effect) }}
@@ -278,7 +278,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
             )}
 
             {/* Category -> Name -> Type (always shown, like card list) */}
-            <div className="px-4 pb-3">
+            <div className="px-3 sm:px-4 pb-3">
               <div
                 className="text-[10px] font-medium tracking-[0.3em] uppercase text-center"
                 style={categoryColor ? { color: categoryColor } : undefined}
@@ -286,8 +286,8 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
                 {card.category === 'Don' ? 'DON!!' : card.category}
               </div>
 
-              <h1 className="mt-0.5 text-2xl font-bold text-slate-900 dark:text-white text-center leading-snug">
-                {decodeHtmlEntities(card.name)}
+              <h1 className="mt-0.5 text-2xl text-slate-900 dark:text-white text-center leading-snug card-name">
+                {decodeHtmlEntities(card.name)}{card.id !== card.base_id && <span className="text-sm font-normal text-slate-400 dark:text-[#64748b]">{card.id.match(/_p\d+$/) ? ' (Parallel)' : card.id.match(/_r\d+$/) ? ' (Reprint)' : ''}</span>}
               </h1>
 
               {card.types.length > 0 && (
@@ -310,7 +310,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
             </div>
 
             {/* Bottom banner */}
-            <div className="px-4 py-3 bg-slate-900 dark:bg-black text-white">
+            <div className="px-3 sm:px-4 py-3 bg-slate-900 dark:bg-black text-white">
               <div className="flex items-center justify-between text-sm opacity-90">
                 <span className="font-mono">{card.id}</span>
                 <div className="flex items-center gap-2">

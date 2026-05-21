@@ -104,7 +104,7 @@ export default function CardCard({ card }: CardCardProps) {
         </div>
 
         {/* Name */}
-        <h3 className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white text-center leading-snug line-clamp-2">
+        <h3 className="mt-0.5 text-sm text-slate-900 dark:text-white text-center leading-snug line-clamp-2 card-name">
           {decodeHtmlEntities(card.name)}{variantSuffix && <span className="text-[10px] font-normal text-slate-400 dark:text-[#64748b]">{variantSuffix}</span>}
         </h3>
 

@@ -191,8 +191,8 @@ export default function CardDetail() {
           </div>
 
           {/* Name */}
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white text-center leading-tight">
-            {decodeHtmlEntities(card.name)}
+          <h1 className="mt-1 text-2xl text-slate-900 dark:text-white text-center leading-tight card-name">
+            {decodeHtmlEntities(card.name)}{card.id !== card.base_id && <span className="text-sm font-normal text-slate-400 dark:text-[#64748b]">{card.id.match(/_p\d+$/) ? ' (Parallel)' : card.id.match(/_r\d+$/) ? ' (Reprint)' : ''}</span>}
           </h1>
 
           {/* Types */}
