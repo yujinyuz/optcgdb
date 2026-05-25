@@ -325,11 +325,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     } else {
       set({ isSlowConnection: slow, showSlowToast: slow });
     }
-    get().search();
   },
   setSlowConnectionOverride: (override) => {
     set({ slowConnectionOverride: override, showSlowToast: false });
-    get().search();
   },
   dismissSlowToast: () => {
     set({ showSlowToast: false });
