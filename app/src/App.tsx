@@ -71,6 +71,47 @@ function OfflineIndicator() {
   )
 }
 
+function SlowConnectionIndicator() {
+  const isSlowConnection = useAppStore((state) => state.isSlowConnection)
+  const showSlowToast = useAppStore((state) => state.showSlowToast)
+  const setSlowConnectionOverride = useAppStore((state) => state.setSlowConnectionOverride)
+  const dismissSlowToast = useAppStore((state) => state.dismissSlowToast)
+
+  useEffect(() => {
+    if (showSlowToast) {
+      const timer = setTimeout(() => dismissSlowToast(), 8000)
+      return () => clearTimeout(timer)
+    }
+  }, [showSlowToast, dismissSlowToast])
+
+  if (!showSlowToast || !isSlowConnection) return null
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-lg px-3 py-2 shadow-lg text-sm animate-[fadeInUp_0.3s_ease-out]">
+      <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span className="text-amber-700 dark:text-amber-300 text-xs">
+        Slow network &mdash; images disabled
+      </span>
+      <button
+        onClick={() => setSlowConnectionOverride(true)}
+        className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 whitespace-nowrap"
+      >
+        Load anyway
+      </button>
+      <button
+        onClick={dismissSlowToast}
+        className="text-amber-400 hover:text-amber-600 dark:hover:text-amber-200"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 function App() {
   const init = useAppStore((state) => state.init)
   const loading = useAppStore((state) => state.loading)
@@ -78,6 +119,7 @@ function App() {
   const selectedCard = useAppStore((state) => state.selectedCard)
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
   const setOnlineStatus = useAppStore((state) => state.setOnlineStatus)
+  const setSlowConnection = useAppStore((state) => state.setSlowConnection)
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0)
 
   useEffect(() => {
@@ -94,6 +136,18 @@ function App() {
       window.removeEventListener('offline', handleOffline)
     }
   }, [setOnlineStatus])
+
+  useEffect(() => {
+    const conn = (navigator as any).connection
+    if (!conn) return
+    const checkSlow = () => {
+      const slow = conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g' || conn.downlink < 0.5
+      setSlowConnection(slow)
+    }
+    checkSlow()
+    conn.addEventListener('change', checkSlow)
+    return () => conn.removeEventListener('change', checkSlow)
+  }, [setSlowConnection])
 
   // Rotate loading messages
   useEffect(() => {
@@ -141,6 +195,7 @@ function App() {
         {selectedCard && (
           <CardModal cardId={selectedCard.id} onClose={() => setSelectedCard(null)} />
         )}
+        <SlowConnectionIndicator />
         <OfflineIndicator />
       </div>
     </BrowserRouter>

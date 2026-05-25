@@ -28,7 +28,9 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
   const preferredLanguage = useAppStore((state) => state.preferredLanguage)
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
   const isOnline = useAppStore((state) => state.isOnline)
-  const showImages = loadExternalImages && isOnline
+  const isSlowConnection = useAppStore((state) => state.isSlowConnection)
+  const slowConnectionOverride = useAppStore((state) => state.slowConnectionOverride)
+  const showImages = loadExternalImages && isOnline && (!isSlowConnection || slowConnectionOverride)
   const reducedMotion = prefersReducedMotion()
 
   const currentIndex = cards.findIndex((c) => c.id === cardId)

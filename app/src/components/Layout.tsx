@@ -18,6 +18,9 @@ function SettingsMenu() {
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
   const setLoadExternalImages = useAppStore((state) => state.setLoadExternalImages)
   const isOnline = useAppStore((state) => state.isOnline)
+  const isSlowConnection = useAppStore((state) => state.isSlowConnection)
+  const slowConnectionOverride = useAppStore((state) => state.slowConnectionOverride)
+  const setSlowConnectionOverride = useAppStore((state) => state.setSlowConnectionOverride)
   const showAlternateArts = useAppStore((state) => state.showAlternateArts)
   const setShowAlternateArts = useAppStore((state) => state.setShowAlternateArts)
   const theme = useAppStore((state) => state.theme)
@@ -134,8 +137,15 @@ function SettingsMenu() {
               {!isOnline && (
                 <span className="text-[10px] text-slate-400 dark:text-[#64748b]">No network</span>
               )}
+              {isSlowConnection && !slowConnectionOverride && loadExternalImages && (
+                <span className="text-[10px] text-amber-500 dark:text-amber-400">Slow network</span>
+              )}
               <button
-                onClick={() => setLoadExternalImages(!loadExternalImages)}
+                onClick={() => {
+                  const next = !loadExternalImages
+                  setLoadExternalImages(next)
+                  if (next && isSlowConnection) setSlowConnectionOverride(true)
+                }}
                 className={`relative w-9 h-5 rounded-full transition-all ${loadExternalImages ? 'bg-[#3b82f6]' : 'bg-slate-200 dark:bg-[#3a3d4a]'} ${!isOnline ? 'opacity-40' : ''}`}
                 disabled={!isOnline}
               >

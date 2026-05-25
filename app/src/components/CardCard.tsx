@@ -14,7 +14,9 @@ export default function CardCard({ card, displayName, disableClick }: CardCardPr
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
   const isOnline = useAppStore((state) => state.isOnline)
-  const showImages = loadExternalImages && isOnline
+  const isSlowConnection = useAppStore((state) => state.isSlowConnection)
+  const slowConnectionOverride = useAppStore((state) => state.slowConnectionOverride)
+  const showImages = loadExternalImages && isOnline && (!isSlowConnection || slowConnectionOverride)
   const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
   const categoryColor = CATEGORY_COLORS[card.category]
 

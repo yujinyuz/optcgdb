@@ -141,6 +141,9 @@ interface AppState {
   loadExternalImages: boolean;
   showAlternateArts: boolean;
   isOnline: boolean;
+  isSlowConnection: boolean;
+  slowConnectionOverride: boolean;
+  showSlowToast: boolean;
   offlineReady: boolean;
   showOfflineToast: boolean;
   searching: boolean;
@@ -159,6 +162,9 @@ interface AppState {
   setPreferredLanguage: (lang: PreferredLanguage) => void;
   setLoadExternalImages: (enabled: boolean) => void;
   setShowAlternateArts: (enabled: boolean) => void;
+  setSlowConnection: (slow: boolean) => void;
+  setSlowConnectionOverride: (override: boolean) => void;
+  dismissSlowToast: () => void;
   setOnlineStatus: (online: boolean) => void;
   setOfflineReady: (ready: boolean) => void;
   triggerOfflineToast: () => void;
@@ -185,6 +191,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   loadExternalImages: localStorage.getItem('optcg-external-images') === 'true',
   showAlternateArts: localStorage.getItem('optcg-show-alternate-arts') === 'true',
   isOnline: navigator.onLine,
+  isSlowConnection: false,
+  slowConnectionOverride: false,
+  showSlowToast: false,
   offlineReady: false,
   showOfflineToast: false,
   searching: false,
@@ -308,6 +317,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.setItem('optcg-show-alternate-arts', String(enabled));
     set({ showAlternateArts: enabled });
     get().search();
+  },
+
+  setSlowConnection: (slow) => {
+    if (!slow) {
+      set({ isSlowConnection: false, slowConnectionOverride: false, showSlowToast: false });
+    } else {
+      set({ isSlowConnection: slow, showSlowToast: slow });
+    }
+    get().search();
+  },
+  setSlowConnectionOverride: (override) => {
+    set({ slowConnectionOverride: override, showSlowToast: false });
+    get().search();
+  },
+  dismissSlowToast: () => {
+    set({ showSlowToast: false });
   },
 
   setOnlineStatus: (online) => {
