@@ -139,6 +139,7 @@ interface AppState {
   preferredLanguage: PreferredLanguage;
   loadExternalImages: boolean;
   showAlternateArts: boolean;
+  isOnline: boolean;
   offlineReady: boolean;
   showOfflineToast: boolean;
   searching: boolean;
@@ -157,6 +158,7 @@ interface AppState {
   setPreferredLanguage: (lang: PreferredLanguage) => void;
   setLoadExternalImages: (enabled: boolean) => void;
   setShowAlternateArts: (enabled: boolean) => void;
+  setOnlineStatus: (online: boolean) => void;
   setOfflineReady: (ready: boolean) => void;
   triggerOfflineToast: () => void;
   dismissOfflineToast: () => void;
@@ -181,6 +183,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   preferredLanguage: getInitialLanguage(),
   loadExternalImages: localStorage.getItem('optcg-external-images') === 'true',
   showAlternateArts: localStorage.getItem('optcg-show-alternate-arts') === 'true',
+  isOnline: navigator.onLine,
   offlineReady: false,
   showOfflineToast: false,
   searching: false,
@@ -304,6 +307,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.setItem('optcg-show-alternate-arts', String(enabled));
     set({ showAlternateArts: enabled });
     get().search();
+  },
+
+  setOnlineStatus: (online) => {
+    set({ isOnline: online });
   },
 
   setOfflineReady: (ready) => {

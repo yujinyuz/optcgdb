@@ -13,6 +13,8 @@ interface CardCardProps {
 export default function CardCard({ card, displayName, disableClick }: CardCardProps) {
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
+  const isOnline = useAppStore((state) => state.isOnline)
+  const showImages = loadExternalImages && isOnline
   const primaryColor = card.colors[0] ? COLOR_HEX[card.colors[0]] : '#64748b'
   const categoryColor = CATEGORY_COLORS[card.category]
 
@@ -37,7 +39,7 @@ export default function CardCard({ card, displayName, disableClick }: CardCardPr
       style={{ transition: 'box-shadow 150ms var(--ease-out-quart), transform 150ms var(--ease-out-quart)' }}
     >
       {/* Top strip: Cost | Power | Attribute (only when no image) */}
-      {(!loadExternalImages || !card.img_url) && (
+      {(!showImages || !card.img_url) && (
       <div className="flex items-center justify-between px-2 py-1.5 shrink-0 bg-slate-50 dark:bg-[#13151f]">
         {card.cost !== null ? (
           <span
@@ -74,7 +76,7 @@ export default function CardCard({ card, displayName, disableClick }: CardCardPr
       )}
 
       {/* Card image or link */}
-      {loadExternalImages && card.img_url ? (
+      {showImages && card.img_url ? (
         <div className="shrink-0 bg-slate-50 dark:bg-[#13151f] relative">
           <ImageLoader
             src={getExternalImageUrl(card.img_url)}
@@ -120,7 +122,7 @@ export default function CardCard({ card, displayName, disableClick }: CardCardPr
         )}
 
         {/* Attributes — text labels below types (no-image mode) */}
-        {!loadExternalImages && card.attributes.length > 0 && (
+        {!showImages && card.attributes.length > 0 && (
           <div className="mt-0.5 text-[10px] text-center truncate">
             {card.attributes.map((attr, i) => (
               <span key={attr} style={{ color: getAttributeColor(attr) }}>
@@ -136,7 +138,7 @@ export default function CardCard({ card, displayName, disableClick }: CardCardPr
       <div className="shrink-0 px-2.5 py-1.5 bg-slate-900 dark:bg-black text-white flex items-center justify-between text-[10px]">
         <span className="font-mono">{card.id}</span>
         <div className="flex items-center gap-1">
-          {(!loadExternalImages && card.counter !== null) && (
+          {(!showImages && card.counter !== null) && (
             <span className="text-[9px] font-bold text-[#3498db]">⚡ +{card.counter}</span>
           )}
           <span className="px-1 rounded bg-white/20 font-bold">

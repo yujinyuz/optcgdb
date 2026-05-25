@@ -77,11 +77,23 @@ function App() {
   const error = useAppStore((state) => state.error)
   const selectedCard = useAppStore((state) => state.selectedCard)
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
+  const setOnlineStatus = useAppStore((state) => state.setOnlineStatus)
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0)
 
   useEffect(() => {
     init()
   }, [init])
+
+  useEffect(() => {
+    const handleOnline = () => setOnlineStatus(true)
+    const handleOffline = () => setOnlineStatus(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [setOnlineStatus])
 
   // Rotate loading messages
   useEffect(() => {

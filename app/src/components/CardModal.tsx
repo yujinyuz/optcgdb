@@ -27,6 +27,8 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
   const setSelectedCard = useAppStore((state) => state.setSelectedCard)
   const preferredLanguage = useAppStore((state) => state.preferredLanguage)
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
+  const isOnline = useAppStore((state) => state.isOnline)
+  const showImages = loadExternalImages && isOnline
   const reducedMotion = prefersReducedMotion()
 
   const currentIndex = cards.findIndex((c) => c.id === cardId)
@@ -236,7 +238,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
             className="rounded-2xl overflow-hidden bg-white dark:bg-[#1a1d2e] shadow-xl shadow-black/10 dark:shadow-black/30"
           >
             {/* Top strip: Cost | Power | Attribute (only when no image) */}
-            {(!loadExternalImages || !bestImageUrl) && (
+            {(!showImages || !bestImageUrl) && (
             <div className="flex items-center justify-between px-4 pt-4 pb-2">
               {card.cost !== null ? (
                 <span
@@ -273,7 +275,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
             )}
 
             {/* Card image or link */}
-            {loadExternalImages && bestImageUrl ? (
+            {showImages && bestImageUrl ? (
               <div className="flex items-center justify-center py-2">
                 <div className="relative w-full max-w-xs aspect-[5/7] rounded-lg overflow-hidden bg-slate-100 dark:bg-[#1a1d2e] shadow-md">
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -345,7 +347,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
               )}
 
               {/* Attributes — text labels below types (no-image mode) */}
-              {(!loadExternalImages || !bestImageUrl) && card.attributes.length > 0 && (
+              {(!showImages || !bestImageUrl) && card.attributes.length > 0 && (
                 <div className="mt-0.5 text-sm text-center truncate">
                   {card.attributes.map((attr, i) => (
                     <span key={attr} style={{ color: getAttributeColor(attr) }}>
@@ -362,7 +364,7 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
               <div className="flex items-center justify-between text-sm opacity-90">
                 <span className="font-mono">{card.id}</span>
                 <div className="flex items-center gap-2">
-                  {(!loadExternalImages && card.counter !== null) && (
+                  {(!showImages && card.counter !== null) && (
                     <span className="text-[10px] font-bold text-[#3498db]">⚡ +{card.counter}</span>
                   )}
                   <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-white/20">
@@ -420,12 +422,12 @@ export default function CardModal({ cardId, onClose }: CardModalProps) {
           </div>
 
           {/* Image variants / alternate arts */}
-          {cardVariants.length > 0 && loadExternalImages && (
+          {cardVariants.length > 0 && showImages && (
             <div className="mt-4">
               <h3 className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold mb-2">
                 Alternate arts
               </h3>
-              {loadExternalImages ? (
+              {showImages ? (
                 /* Inline images */
                 <div className="space-y-4">
                   {(() => {

@@ -17,6 +17,7 @@ function SettingsMenu() {
   const menuRef = useRef<HTMLDivElement>(null)
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
   const setLoadExternalImages = useAppStore((state) => state.setLoadExternalImages)
+  const isOnline = useAppStore((state) => state.isOnline)
   const showAlternateArts = useAppStore((state) => state.showAlternateArts)
   const setShowAlternateArts = useAppStore((state) => state.setShowAlternateArts)
   const theme = useAppStore((state) => state.theme)
@@ -129,11 +130,18 @@ function SettingsMenu() {
           <div className="border-t border-slate-100 dark:border-[#2e303a] my-1" />
           <div className="flex items-center justify-between px-3 py-2">
             <span className="text-sm text-slate-700 dark:text-[#cbd5e1]">Card images</span>
-            <button
-              onClick={() => setLoadExternalImages(!loadExternalImages)}
-                className={`relative w-9 h-5 rounded-full transition-all ${loadExternalImages ? 'bg-[#3b82f6]' : 'bg-slate-200 dark:bg-[#3a3d4a]'}`}
+            <div className="flex items-center gap-2">
+              {!isOnline && (
+                <span className="text-[10px] text-slate-400 dark:text-[#64748b]">No network</span>
+              )}
+              <button
+                onClick={() => setLoadExternalImages(!loadExternalImages)}
+                className={`relative w-9 h-5 rounded-full transition-all ${loadExternalImages ? 'bg-[#3b82f6]' : 'bg-slate-200 dark:bg-[#3a3d4a]'} ${!isOnline ? 'opacity-40' : ''}`}
+                disabled={!isOnline}
               >
-                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${loadExternalImages ? 'translate-x-4' : 'translate-x-0'}`} />            </button>
+                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${loadExternalImages ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
           </div>
           {loadExternalImages && (
             <div className="flex items-center justify-between px-6 py-2">

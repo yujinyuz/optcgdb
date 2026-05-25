@@ -10,6 +10,8 @@ export default function CardDetail() {
   const { id } = useParams<{ id: string }>()
   const preferredLanguage = useAppStore((state) => state.preferredLanguage)
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
+  const isOnline = useAppStore((state) => state.isOnline)
+  const showImages = loadExternalImages && isOnline
 
   const [card, setCard] = useState<Card | null>(null)
   const [cardPacks, setCardPacks] = useState<{ packId: string; label: string; rawTitle: string }[]>([])
@@ -270,7 +272,7 @@ export default function CardDetail() {
       </div>
 
       {/* Image variants / alternate arts */}
-      {cardVariants.length > 0 && loadExternalImages && (
+      {cardVariants.length > 0 && showImages && (
         <div className="mt-4">
           <h3 className="text-[11px] text-slate-500 dark:text-[#64748b] uppercase tracking-wider font-semibold mb-2">
             Alternate arts
