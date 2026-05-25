@@ -317,7 +317,7 @@ function getCardById(db: Database, id: string, preferredLanguage?: 'english' | '
   const result = db.exec(
     `SELECT ${cols}
      FROM cards${translationJoin}
-     WHERE id = ?`,
+     WHERE UPPER(id) = UPPER(?)`,
     [id]
   );
   if (!result[0]?.values[0]) return null;

@@ -244,16 +244,16 @@ function SettingsMenu() {
 function TopSearchBar({ onFocusChange }: { onFocusChange: (focused: boolean) => void }) {
   const searchInput = useAppStore((state) => state.searchInput)
   const setSearchInput = useAppStore((state) => state.setSearchInput)
-  const setFilters = useAppStore((state) => state.setFilters)
+  const setSearchFilter = useAppStore((state) => state.setSearchFilter)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleChange = useCallback((value: string) => {
     setSearchInput(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      setFilters({ search: value })
-    }, 150)
-  }, [setSearchInput, setFilters])
+      setSearchFilter(value)
+    }, 300)
+  }, [setSearchInput, setSearchFilter])
 
   return (
     <div className="relative flex-1 min-w-0 max-w-xs">

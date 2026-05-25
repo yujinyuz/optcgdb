@@ -23,6 +23,9 @@ function getInitialLanguage(): PreferredLanguage {
 
 /* ── URL sync helpers ─────────────────────────────────────────── */
 
+let searchUrlSyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+
 function filtersToParams(filters: CardFilters): URLSearchParams {
   const p = new URLSearchParams();
   if (filters.search) p.set('q', filters.search);
@@ -139,10 +142,12 @@ interface AppState {
   offlineReady: boolean;
   showOfflineToast: boolean;
   searching: boolean;
+  searchLoading: boolean;
 
   init: () => Promise<void>;
   setFilters: (filters: Partial<CardFilters>) => void;
   setSearchInput: (value: string) => void;
+  setSearchFilter: (value: string) => void;
   setSearchScope: (scope: SearchScope) => void;
   resetFilters: () => void;
   loadMore: () => Promise<void>;
@@ -179,6 +184,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   offlineReady: false,
   showOfflineToast: false,
   searching: false,
+  searchLoading: false,
 
   init: async () => {
     try {
@@ -194,6 +200,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const theme = get().theme;
       document.documentElement.classList.toggle('dark', theme === 'dark');
 
+      set({ searching: true });
       await get().search();
     } catch (err) {
       set({ loading: false, error: String(err) });
@@ -203,12 +210,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   setFilters: (filters) => {
     const newFilters = { ...get().filters, ...filters };
     writeUrlFilters(newFilters);
-    set({ filters: newFilters, offset: 0, hasMore: false, ...(filters.search !== undefined ? { searchInput: filters.search } : {}) });
+    set({ filters: newFilters, offset: 0, hasMore: false, searching: true, ...(filters.search !== undefined ? { searchInput: filters.search } : {}) });
     get().search();
   },
 
   setSearchInput: (value) => {
-    set({ searchInput: value });
+    set({ searchInput: value })
+    if (searchUrlSyncTimer) clearTimeout(searchUrlSyncTimer)
+    searchUrlSyncTimer = setTimeout(() => {
+      const { filters } = useAppStore.getState()
+      writeUrlFilters({ ...filters, search: value })
+    }, 1000)
+  },
+
+  setSearchFilter: (value) => {
+    const newFilters = { ...get().filters, search: value }
+    set({ filters: newFilters, offset: 0, hasMore: false })
+    get().search()
   },
 
   setSearchScope: (scope) => {
@@ -302,7 +320,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   search: async (append = false) => {
     const { filters, limit, offset, preferredLanguage, showAlternateArts, loadExternalImages } = get();
-    set({ searching: true });
+    set({ searchLoading: true });
     try {
       const { cards, total } = await queryCards(
         buildQueryParams(filters, limit, offset, preferredLanguage, showAlternateArts, loadExternalImages)
@@ -311,10 +329,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         cards: append ? [...get().cards, ...cards] : cards,
         totalCards: total,
         hasMore: offset + cards.length < total,
+        searchLoading: false,
         searching: false,
       });
     } catch (err) {
-      set({ searching: false, error: String(err) });
+      set({ searchLoading: false, searching: false, error: String(err) });
     }
   },
 }));

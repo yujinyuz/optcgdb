@@ -114,6 +114,7 @@ export default function CardGrid() {
   const totalCards = useAppStore((state) => state.totalCards)
   const hasMore = useAppStore((state) => state.hasMore)
   const searching = useAppStore((state) => state.searching)
+  const searchLoading = useAppStore((state) => state.searchLoading)
   const filters = useAppStore((state) => state.filters)
   const loadMore = useAppStore((state) => state.loadMore)
   const sections = getLanguageSections()
@@ -161,7 +162,7 @@ export default function CardGrid() {
 
   const renderCount = (displayCount: number, displayTotal: number) => (
     <span className={`text-sm text-slate-600 dark:text-[#94a3b8] transition-all ${countPulse && !reducedMotion ? 'scale-110' : 'scale-100'}`} style={{ transition: 'transform 150ms var(--ease-out-quart)' }}>
-      {searching && displayCount === 0 ? (
+      {searchLoading && displayCount === 0 ? (
         'Searching...'
       ) : (
         <>
@@ -180,7 +181,7 @@ export default function CardGrid() {
       <div className="flex items-center justify-between mb-3">
         {isSearching && sections.length > 0 ? (
           <span className="text-sm text-slate-600 dark:text-[#94a3b8]">
-            {searching && cards.length === 0 ? (
+            {searchLoading && cards.length === 0 ? (
               'Searching...'
             ) : (
               <>

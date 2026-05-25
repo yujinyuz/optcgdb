@@ -122,6 +122,7 @@ function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<CardGrid />} />
+            <Route path="/c/:id" element={<CardDetail />} />
             <Route path="/card/:id" element={<CardDetail />} />
           </Route>
         </Routes>
