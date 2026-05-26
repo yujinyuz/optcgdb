@@ -9,23 +9,17 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.webp', 'favicon.svg', 'app-icon.svg', 'icons.svg', 'sql-wasm-browser.wasm', 'optcg.db'],
+      includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png', 'site.webmanifest', 'icons.svg', 'sql-wasm-browser.wasm', 'optcg.db'],
       manifest: {
         name: 'OPTCG Lib',
         short_name: 'OPTCG',
         description: 'offline first one piece card game library',
-        theme_color: '#0f1117',
-        background_color: '#0f1117',
         display: 'standalone',
         scope: '/',
         start_url: '/',
         icons: [
-          {
-            src: '/app-icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any maskable',
-          },
+          { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
         ],
       },
       workbox: {
