@@ -86,7 +86,7 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
                 Why I Built This
               </h2>
               <p className="text-xs text-slate-400 dark:text-[#64748b] mt-0.5">
-                A personal project, not a product
+                For players, by players
               </p>
             </div>
           </div>
@@ -113,7 +113,7 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
                 </svg>
               }
               title="How it works"
-              delay={reducedMotion ? 0 : 100}
+              delay={reducedMotion ? 0 : 150}
             >
               OPTCG Lib stores the entire card database (~10MB) right on your phone. First visit downloads everything;
               after that it works fully offline. Search, filter, browse — no connection needed. It's a <strong>Progressive Web App</strong>,
