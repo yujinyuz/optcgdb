@@ -22,7 +22,7 @@ const loadingMessages = [
   'Loading database...',
   'Preparing card catalog...',
   'Indexing sets and rarities...',
-  'Ready to sail...',
+  'Almost ready...',
 ]
 
 function OfflineIndicator({ updateAvailable }: { updateAvailable: boolean }) {
@@ -147,11 +147,11 @@ function App() {
     return () => conn.removeEventListener('change', checkSlow)
   }, [setSlowConnection])
 
-  // Rotate loading messages
+  // Rotate loading messages — cycle through but stop at last one
   useEffect(() => {
     if (!loading) return
     const interval = setInterval(() => {
-      setLoadingMsgIdx((i) => (i + 1) % loadingMessages.length)
+      setLoadingMsgIdx((i) => Math.min(i + 1, loadingMessages.length - 1))
     }, 800)
     return () => clearInterval(interval)
   }, [loading])
