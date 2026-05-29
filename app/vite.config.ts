@@ -12,7 +12,7 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png', 'site.webmanifest', 'icons.svg', 'sql-wasm-browser.wasm', 'optcg.db'],
       manifest: {
         name: 'OPTCG Lib',
-        short_name: 'OPTCG',
+        short_name: 'OPTCG Lib',
         description: 'offline first one piece card game library',
         display: 'standalone',
         scope: '/',
