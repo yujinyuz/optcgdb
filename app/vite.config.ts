@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png', 'site.webmanifest', 'icons.svg', 'loading-logo.webp', 'sql-wasm-browser.wasm', 'optcg.db'],
+      includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png', 'icons.svg'],
       manifest: {
         name: 'OPTCG Lib',
         short_name: 'OPTCG Lib',
@@ -32,6 +32,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 12 * 1024 * 1024, // 12MB for the wasm/DB
         clientsClaim: true,
         skipWaiting: true,
+        cleanupOutdatedCaches: true,
       },
     }),
   ],
