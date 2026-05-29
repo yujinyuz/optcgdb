@@ -11,14 +11,31 @@ import {
   CATEGORY_COLORS,
 } from '../types'
 
-function SettingsMenu() {
+type InstallPrompt = Event & {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+}
+
+function isStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+}
+
+const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+
+function SettingsMenu({ deferredPrompt, onInstall, installSuccess }: {
+  deferredPrompt: InstallPrompt | null
+  onInstall: () => void
+  installSuccess: boolean
+}) {
   const [open, setOpen] = useState(false)
   const [closing, setClosing] = useState(false)
   const [installTooltip, setInstallTooltip] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
-  const [deferredPrompt, setDeferredPrompt] = useState<Event & { prompt: () => Promise<void>; userChoice?: Promise<{ outcome: string }> } | null>(null)
   const [installDismissed, setInstallDismissed] = useState(false)
-  const [installSuccess, setInstallSuccess] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const loadExternalImages = useAppStore((state) => state.loadExternalImages)
   const setLoadExternalImages = useAppStore((state) => state.setLoadExternalImages)
@@ -34,50 +51,17 @@ function SettingsMenu() {
   const setPreferredLanguage = useAppStore((state) => state.setPreferredLanguage)
   const reducedMotion = prefersReducedMotion()
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+  const isIOS = isIOSDevice()
+  const isStandalone = isStandaloneMode()
 
-  useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault()
-      setDeferredPrompt(e as Event & { prompt: () => Promise<void>; userChoice?: Promise<{ outcome: string }> })
-      setInstallDismissed(false)
-    }
-    window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
-  }, [])
-
-  useEffect(() => {
-    const handleAppInstalled = () => {
-      setDeferredPrompt(null)
-      setInstallSuccess(true)
-      setInstallTooltip(false)
-      setTimeout(() => setInstallSuccess(false), 3000)
-    }
-    window.addEventListener('appinstalled', handleAppInstalled)
-    return () => window.removeEventListener('appinstalled', handleAppInstalled)
-  }, [])
-
-  const handleInstall = useCallback(async () => {
+  const handleInstall = useCallback(() => {
     if (isIOS || !deferredPrompt) {
       setInstallTooltip(true)
       return
     }
-    try {
-      deferredPrompt.prompt()
-      const { outcome } = await deferredPrompt.userChoice ?? { outcome: 'dismissed' }
-      if (outcome === 'accepted') {
-        setInstallSuccess(true)
-        setInstallTooltip(false)
-        setTimeout(() => setInstallSuccess(false), 3000)
-      } else {
-        setInstallDismissed(true)
-      }
-    } catch {
-      setInstallTooltip(true)
-    }
-    setDeferredPrompt(null)
-  }, [isIOS, deferredPrompt])
+    onInstall()
+    setInstallDismissed(true)
+  }, [isIOS, deferredPrompt, onInstall])
 
   useEffect(() => {
     if (!open) return
@@ -483,6 +467,74 @@ function getActiveFilterCount(filters: ReturnType<typeof useAppStore.getState>['
   return count
 }
 
+function InstallBanner({ deferredPrompt, onInstall }: {
+  deferredPrompt: InstallPrompt | null
+  onInstall: () => void
+}) {
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      const ts = localStorage.getItem('optcg-install-banner-dismissed')
+      if (ts && Date.now() - Number(ts) < DISMISS_COOLDOWN_MS) return true
+    } catch { /* localStorage unavailable */ }
+    return false
+  })
+  const [closing, setClosing] = useState(false)
+  const reducedMotion = prefersReducedMotion()
+
+  const handleDismiss = useCallback(() => {
+    try {
+      localStorage.setItem('optcg-install-banner-dismissed', String(Date.now()))
+    } catch { /* localStorage unavailable */ }
+    setClosing(true)
+    setTimeout(() => { setDismissed(true); setClosing(false) }, reducedMotion ? 100 : 200)
+  }, [reducedMotion])
+
+  if (isStandaloneMode() || isIOSDevice() || !deferredPrompt || dismissed) return null
+
+  return (
+    <div
+      className="fixed bottom-0 inset-x-0 z-[15] sm:hidden"
+      style={{
+        transform: closing ? 'translateY(100%)' : 'translateY(0)',
+        transition: `transform ${reducedMotion ? 100 : 200}ms var(--ease-out-quart)`,
+      }}
+    >
+      <div className="bg-white dark:bg-[#1a1d2e] border-t border-slate-200 dark:border-[#2e303a] shadow-[0_-2px_10px_rgba(0,0,0,0.08)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.3)]">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <img
+            src="/android-chrome-192x192.png"
+            alt=""
+            className="w-8 h-8 rounded-lg shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-slate-900 dark:text-white leading-tight">
+              Install OPTCG Lib
+            </div>
+            <div className="text-xs text-slate-500 dark:text-[#94a3b8] leading-tight mt-0.5">
+              Browse cards offline
+            </div>
+          </div>
+          <button
+            onClick={onInstall}
+            className="shrink-0 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#3b82f6] hover:bg-[#2563eb] active:bg-[#1d4ed8] rounded-lg transition-colors"
+          >
+            Install
+          </button>
+          <button
+            onClick={handleDismiss}
+            className="shrink-0 p-1.5 text-slate-400 dark:text-[#64748b] hover:text-slate-600 dark:hover:text-[#94a3b8] hover:bg-slate-100 dark:hover:bg-[#25283a] rounded-lg transition-colors"
+            aria-label="Dismiss"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Layout() {
   const filters = useAppStore((state) => state.filters)
   const resetFilters = useAppStore((state) => state.resetFilters)
@@ -491,10 +543,51 @@ export default function Layout() {
   const [searchFocused, setSearchFocused] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<InstallPrompt | null>(null)
+  const [installSuccess, setInstallSuccess] = useState(false)
+  const [toastClosing, setToastClosing] = useState(false)
   const dragOffsetRef = useRef(0)
   const reducedMotion = prefersReducedMotion()
   const dragStartRef = useRef<number | null>(null)
 
+  // ── Install prompt lifecycle ──────────────────────────────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault()
+      setDeferredPrompt(e as InstallPrompt)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  useEffect(() => {
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null)
+      setToastClosing(false)
+      setInstallSuccess(true)
+      setTimeout(() => { setToastClosing(true); setTimeout(() => { setInstallSuccess(false); setToastClosing(false) }, 200) }, 4000)
+    }
+    window.addEventListener('appinstalled', handleAppInstalled)
+    return () => window.removeEventListener('appinstalled', handleAppInstalled)
+  }, [])
+
+  const handleInstall = useCallback(async () => {
+    if (!deferredPrompt) return
+    try {
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice ?? { outcome: 'dismissed' }
+      if (outcome === 'accepted') {
+        setToastClosing(false)
+        setInstallSuccess(true)
+        setTimeout(() => { setToastClosing(true); setTimeout(() => { setInstallSuccess(false); setToastClosing(false) }, 200) }, 4000)
+      }
+    } catch {
+      // prompt() failed — user can retry from settings
+    }
+    setDeferredPrompt(null)
+  }, [deferredPrompt])
+
+  // ── Sidebar events ────────────────────────────────────────────
   useEffect(() => {
     const handleClose = () => { setSidebarClosing(true); setTimeout(() => { setSidebarOpen(false); setSidebarClosing(false) }, reducedMotion ? 100 : 200) }
     const handleOpen = () => { setSidebarOpen(true); setSidebarClosing(false); setDragOffset(0) }
@@ -684,7 +777,7 @@ export default function Layout() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M17 7h.01M12 7h.01" />
                 </svg>
               </button>
-              <SettingsMenu />
+              <SettingsMenu deferredPrompt={deferredPrompt} onInstall={handleInstall} installSuccess={installSuccess} />
             </div>
           </div>
         </div>
@@ -700,6 +793,28 @@ export default function Layout() {
         {/* Mobile filter FAB — replaces navbar filter button on small screens */}
         <FilterFAB sidebarOpen={sidebarOpen} />
       </div>
+
+      {/* Android install banner — proactive prompt for mobile browsers */}
+      <InstallBanner deferredPrompt={deferredPrompt} onInstall={handleInstall} />
+
+      {/* Install success toast — visible feedback after installation */}
+      {installSuccess && (
+        <div
+          className="fixed top-16 inset-x-0 z-50 flex justify-center px-4 pointer-events-none"
+          style={{
+            opacity: toastClosing ? 0 : 1,
+            transform: toastClosing ? 'translateY(-8px)' : 'translateY(0)',
+            transition: `opacity ${reducedMotion ? 100 : 200}ms ease-out, transform ${reducedMotion ? 100 : 200}ms ease-out`,
+          }}
+        >
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-medium shadow-lg shadow-emerald-600/25 pointer-events-auto">
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Installed — find it on your home screen
+          </div>
+        </div>
+      )}
     </div>
   )
 }
