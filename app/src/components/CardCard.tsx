@@ -170,7 +170,7 @@ export default function CardCard({ card, displayName, disableClick }: CardCardPr
                 <span dangerouslySetInnerHTML={{ __html: renderCardText(card.effect) }} />
               )}
               {card.trigger_text && (
-                <span className="block mt-1 text-[10px] italic text-slate-600 dark:text-[#94a3b8] bg-slate-200 dark:bg-[#020617] rounded px-1.5 py-0.5" dangerouslySetInnerHTML={{ __html: renderCardText(card.trigger_text) }} />
+                <span className="block mt-1 text-[10px] italic text-slate-700 dark:text-[#e2e8f0] bg-slate-200 dark:bg-[#020617] rounded px-1.5 py-0.5" dangerouslySetInnerHTML={{ __html: renderCardText(card.trigger_text) }} />
               )}
             </div>
             <span className="text-[9px] text-slate-400 dark:text-[#475569] mt-0.5 inline-block">
