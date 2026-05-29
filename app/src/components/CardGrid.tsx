@@ -212,7 +212,7 @@ export default function CardGrid() {
         ))
       ) : (
         <div key={resultKey} className="animate-[fadeIn_150ms_var(--ease-out-quart)_both]">
-          {renderCardGrid(isSearching && sections.length === 1 ? sections[0].cards : cards)}
+          {renderCardGrid(isSearching && sections.length === 1 ? sections[0].cards : cards, isSearching && sections.length === 1 ? sections[0].lang : undefined)}
         </div>
       )}
 
