@@ -161,7 +161,6 @@ function App() {
       <div className="min-h-screen bg-slate-50 dark:bg-[#0f1117] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <img src="/loading-logo.webp" alt="" className="w-10 opacity-50 dark:invert animate-spin" />
-          <div className="w-10 h-10 border-2 border-slate-200 dark:border-[#2e303a] border-t-[#3b82f6] rounded-full animate-spin" />
           <div className="text-slate-500 dark:text-[#94a3b8] text-sm font-medium tracking-wide transition-opacity duration-300" key={loadingMsgIdx}>
             {loadingMessages[loadingMsgIdx]}
           </div>
