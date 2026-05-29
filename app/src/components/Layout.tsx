@@ -6,15 +6,16 @@ import FilterFAB from './FilterFAB'
 import AboutModal from './AboutModal'
 import { prefersReducedMotion } from '../lib/spring'
 import {
+  clearInstallPrompt,
+  getInstallPrompt,
+  subscribeInstallPrompt,
+  type InstallPrompt,
+} from '../installPrompt'
+import {
   RARITY_SHORT,
   COLOR_HEX,
   CATEGORY_COLORS,
 } from '../types'
-
-type InstallPrompt = Event & {
-  prompt: () => Promise<void>
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
-}
 
 function isIOSDevice() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
@@ -543,7 +544,7 @@ export default function Layout() {
   const [searchFocused, setSearchFocused] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
-  const [deferredPrompt, setDeferredPrompt] = useState<InstallPrompt | null>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<InstallPrompt | null>(() => getInstallPrompt())
   const [installSuccess, setInstallSuccess] = useState(false)
   const [toastClosing, setToastClosing] = useState(false)
   const dragOffsetRef = useRef(0)
@@ -551,18 +552,10 @@ export default function Layout() {
   const dragStartRef = useRef<number | null>(null)
 
   // ── Install prompt lifecycle ──────────────────────────────────
-  useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault()
-      setDeferredPrompt(e as InstallPrompt)
-    }
-    window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
-  }, [])
+  useEffect(() => subscribeInstallPrompt(setDeferredPrompt), [])
 
   useEffect(() => {
     const handleAppInstalled = () => {
-      setDeferredPrompt(null)
       setToastClosing(false)
       setInstallSuccess(true)
       setTimeout(() => { setToastClosing(true); setTimeout(() => { setInstallSuccess(false); setToastClosing(false) }, 200) }, 4000)
@@ -584,7 +577,7 @@ export default function Layout() {
     } catch {
       // prompt() failed — user can retry from settings
     }
-    setDeferredPrompt(null)
+    clearInstallPrompt()
   }, [deferredPrompt])
 
   // ── Sidebar events ────────────────────────────────────────────
